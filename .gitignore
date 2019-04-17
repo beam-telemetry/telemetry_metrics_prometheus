@@ -7,3 +7,5 @@ erl_crash.dump
 *.ez
 *.beam
 /config/*.secret.exs
+# Ignore package tarball (built via "mix hex.build").
+telemetry_metrics_prometheus-*.tar
