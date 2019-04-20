@@ -8,8 +8,8 @@ defmodule TelemetryMetricsPrometheus.ExporterTest do
       expected = """
       # HELP http_request_total The total number of HTTP requests.
       # TYPE http_request_total counter
-      http_request_total{code="200",method="post"} 1027
-      http_request_total{code="400",method="post"} 3\
+      http_request_total{code="200",env="prod",method="post",service="cart"} 1027
+      http_request_total{code="400",env="prod",method="post",service="cart"} 3\
       """
 
       metric =
@@ -23,7 +23,7 @@ defmodule TelemetryMetricsPrometheus.ExporterTest do
         {{[:http, :request, :total], %{"method" => "post", "code" => "400"}}, 3}
       ]
 
-      result = Exporter.format(metric, time_series)
+      result = Exporter.format(metric, time_series, env: :prod, service: "cart")
 
       assert result == expected
     end
@@ -44,7 +44,7 @@ defmodule TelemetryMetricsPrometheus.ExporterTest do
         {{[:http, :request, :total], %{}}, 1027}
       ]
 
-      result = Exporter.format(metric, time_series)
+      result = Exporter.format(metric, time_series, [])
 
       assert result == expected
     end
@@ -53,8 +53,8 @@ defmodule TelemetryMetricsPrometheus.ExporterTest do
       expected = """
       # HELP cache_keys_total The total number of cache keys.
       # TYPE cache_keys_total gauge
-      cache_keys_total{name="users"} 1027
-      cache_keys_total{name="short_urls"} 3\
+      cache_keys_total{env="prod",name="users",service="cart"} 1027
+      cache_keys_total{env="prod",name="short_urls",service="cart"} 3\
       """
 
       metric =
@@ -68,7 +68,7 @@ defmodule TelemetryMetricsPrometheus.ExporterTest do
         {{[:cache, :keys, :total], %{"name" => "short_urls"}}, 3}
       ]
 
-      result = Exporter.format(metric, time_series)
+      result = Exporter.format(metric, time_series, env: :prod, service: "cart")
 
       assert result == expected
     end
@@ -89,7 +89,7 @@ defmodule TelemetryMetricsPrometheus.ExporterTest do
         {{[:cache, :key, :total], %{}}, 1027}
       ]
 
-      result = Exporter.format(metric, time_series)
+      result = Exporter.format(metric, time_series, [])
 
       assert result == expected
     end
@@ -98,8 +98,8 @@ defmodule TelemetryMetricsPrometheus.ExporterTest do
       expected = """
       # HELP cache_key_invalidations_total The total number of cache key invalidations.
       # TYPE cache_key_invalidations_total counter
-      cache_key_invalidations_total{name="users"} 1027
-      cache_key_invalidations_total{name="short_urls"} 3\
+      cache_key_invalidations_total{env="prod",name="users",service="cart"} 1027
+      cache_key_invalidations_total{env="prod",name="short_urls",service="cart"} 3\
       """
 
       metric =
@@ -113,7 +113,7 @@ defmodule TelemetryMetricsPrometheus.ExporterTest do
         {{[:cache, :key, :invalidations, :total], %{"name" => "short_urls"}}, 3}
       ]
 
-      result = Exporter.format(metric, time_series)
+      result = Exporter.format(metric, time_series, env: :prod, service: "cart")
 
       assert result == expected
     end
@@ -134,7 +134,7 @@ defmodule TelemetryMetricsPrometheus.ExporterTest do
         {{[:cache, :key, :invalidations, :total], %{}}, 1027}
       ]
 
-      result = Exporter.format(metric, time_series)
+      result = Exporter.format(metric, time_series, [])
 
       assert result == expected
     end
@@ -143,14 +143,14 @@ defmodule TelemetryMetricsPrometheus.ExporterTest do
       expected = """
       # HELP http_request_duration_seconds A histogram of the request duration.
       # TYPE http_request_duration_seconds histogram
-      http_request_duration_seconds_bucket{method="GET",le="0.05"} 24054
-      http_request_duration_seconds_bucket{method="GET",le="0.1"} 33444
-      http_request_duration_seconds_bucket{method="GET",le="0.2"} 100392
-      http_request_duration_seconds_bucket{method="GET",le="0.5"} 129389
-      http_request_duration_seconds_bucket{method="GET",le="1"} 133988
-      http_request_duration_seconds_bucket{method="GET",le="+Inf"} 144320
-      http_request_duration_seconds_sum{method="GET"} 53423
-      http_request_duration_seconds_count{method="GET"} 144320\
+      http_request_duration_seconds_bucket{env="prod",method="GET",service="cart",le="0.05"} 24054
+      http_request_duration_seconds_bucket{env="prod",method="GET",service="cart",le="0.1"} 33444
+      http_request_duration_seconds_bucket{env="prod",method="GET",service="cart",le="0.2"} 100392
+      http_request_duration_seconds_bucket{env="prod",method="GET",service="cart",le="0.5"} 129389
+      http_request_duration_seconds_bucket{env="prod",method="GET",service="cart",le="1"} 133988
+      http_request_duration_seconds_bucket{env="prod",method="GET",service="cart",le="+Inf"} 144320
+      http_request_duration_seconds_sum{env="prod",method="GET",service="cart"} 53423
+      http_request_duration_seconds_count{env="prod",method="GET",service="cart"} 144320\
       """
 
       metric =
@@ -173,7 +173,9 @@ defmodule TelemetryMetricsPrometheus.ExporterTest do
       result =
         Exporter.format(
           metric,
-          [{{metric.name, %{"method" => "GET"}}, {buckets, 144_320, 53423}}]
+          [{{metric.name, %{"method" => "GET"}}, {buckets, 144_320, 53423}}],
+          env: :prod,
+          service: "cart"
         )
 
       assert result == expected
@@ -209,7 +211,7 @@ defmodule TelemetryMetricsPrometheus.ExporterTest do
         {"+Inf", 144_320}
       ]
 
-      result = Exporter.format(metric, [{{metric.name, %{}}, {buckets, 144_320, 53423}}])
+      result = Exporter.format(metric, [{{metric.name, %{}}, {buckets, 144_320, 53423}}], [])
 
       assert result == expected
     end

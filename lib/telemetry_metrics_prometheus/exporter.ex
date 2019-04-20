@@ -2,48 +2,49 @@ defmodule TelemetryMetricsPrometheus.Exporter do
   @moduledoc false
   alias Telemetry.Metrics.{Counter, Distribution, LastValue, Sum}
 
-  def export(time_series, definitions) do
+  def export(time_series, definitions, common_labels) do
     definitions
     |> Stream.map(fn %{name: name} = metric ->
       case time_series[name] do
         nil -> nil
-        ts -> format(metric, ts)
+        ts -> format(metric, ts, common_labels)
       end
     end)
     |> Enum.reject(&is_nil/1)
     |> Enum.join("\n")
   end
 
-  def format(%Counter{} = metric, time_series) do
-    format_standard({metric, time_series}, "counter")
+  def format(%Counter{} = metric, time_series, common_labels) do
+    format_standard({metric, time_series}, common_labels, "counter")
   end
 
-  def format(%LastValue{} = metric, time_series) do
-    format_standard({metric, time_series}, "gauge")
+  def format(%LastValue{} = metric, time_series, common_labels) do
+    format_standard({metric, time_series}, common_labels, "gauge")
   end
 
-  def format(%Sum{} = metric, time_series) do
-    format_standard({metric, time_series}, "counter")
+  def format(%Sum{} = metric, time_series, common_labels) do
+    format_standard({metric, time_series}, common_labels, "counter")
   end
 
-  def format(%Distribution{} = metric, time_series) do
+  def format(%Distribution{} = metric, time_series, common_labels) do
     Enum.map(time_series, fn ts ->
-      format_disribution(metric, ts)
+      format_disribution(metric, ts, common_labels)
     end)
     |> Enum.join("\n")
   end
 
-  def format_disribution(metric, {{_, labels}, {buckets, count, sum}}) do
+  def format_disribution(metric, {{_, agg_labels}, {buckets, count, sum}}, common_labels) do
     name = format_name(metric.name)
     help = "# HELP #{name} #{metric.description}"
     type = "# TYPE #{name} histogram"
 
+    labels = Enum.into(common_labels, agg_labels)
     has_labels = map_size(labels) > 0
 
     samples =
       Enum.map_join(buckets, "\n", fn {upper_bound, count} ->
         if has_labels do
-          ~s(#{name}_bucket{#{format_tags(labels)},le="#{upper_bound}"} #{count})
+          ~s(#{name}_bucket{#{format_labels(labels)},le="#{upper_bound}"} #{count})
         else
           ~s(#{name}_bucket{le="#{upper_bound}"} #{count})
         end
@@ -51,7 +52,7 @@ defmodule TelemetryMetricsPrometheus.Exporter do
 
     summary =
       if has_labels do
-        "#{name}_sum{#{format_tags(labels)}} #{sum}\n#{name}_count{#{format_tags(labels)}} #{
+        "#{name}_sum{#{format_labels(labels)}} #{sum}\n#{name}_count{#{format_labels(labels)}} #{
           count
         }"
       else
@@ -61,37 +62,31 @@ defmodule TelemetryMetricsPrometheus.Exporter do
     Enum.join([help, type, samples, summary], "\n")
   end
 
-  defp format_standard({metric, time_series}, type) do
+  defp format_standard({metric, time_series}, common_labels, type) do
     name = format_name(metric.name)
     help = "# HELP #{name} #{metric.description}"
     type = "# TYPE #{name} #{type}"
 
     samples =
-      Enum.map_join(time_series, "\n", fn series ->
-        if has_tags?(series) do
-          "#{name}{#{fetch_tags(series) |> format_tags()}} #{elem(series, 1)}"
+      Enum.map_join(time_series, "\n", fn {{_, agg_labels}, agg_val} ->
+        labels = Enum.into(common_labels, agg_labels)
+        has_labels = map_size(labels) > 0
+
+        if has_labels do
+          "#{name}{#{format_labels(labels)}} #{agg_val}"
         else
-          "#{name} #{elem(series, 1)}"
+          "#{name} #{agg_val}"
         end
       end)
 
     Enum.join([help, type, samples], "\n")
   end
 
-  defp has_tags?(series) do
-    series
-    |> fetch_tags()
-    |> map_size() > 0
-  end
-
-  defp format_tags(tags) do
-    Enum.map_join(tags, ",", fn {k, v} -> ~s(#{k}="#{v}") end)
-  end
-
-  defp fetch_tags(series) do
-    series
-    |> elem(0)
-    |> elem(1)
+  defp format_labels(labels) do
+    labels
+    |> Enum.map(fn {k, v} -> ~s(#{k}="#{v}") end)
+    |> Enum.sort()
+    |> Enum.join(",")
   end
 
   defp format_name(name) do

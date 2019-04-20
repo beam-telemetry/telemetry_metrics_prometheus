@@ -36,13 +36,13 @@ Open another terminal and curl the endpoint a few times to see the output.
  $ curl http://localhost:9568/metrics
 # HELP prometheus_metrics_table_size_total A gauge of the key count of a prometheus metrics aggregation table
 # TYPE prometheus_metrics_table_size_total gauge
-prometheus_metrics_table_size_total{name="prometheus_metrics_dist"} 1 1555038768802809000
-prometheus_metrics_table_size_total{name="prometheus_metrics"} 4 1555038768802809000
+prometheus_metrics_table_size_total{name="prometheus_metrics_dist"} 1
+prometheus_metrics_table_size_total{name="prometheus_metrics"} 4
 
 # HELP prometheus_metrics_table_memory_bytes A gauge of the memory size of a prometheus metrics aggregation table
 # TYPE prometheus_metrics_table_memory_bytes gauge
-prometheus_metrics_table_memory_bytes{name="prometheus_metrics_dist"} 1356 1555038768802809000
-prometheus_metrics_table_memory_bytes{name="prometheus_metrics"} 1426 1555038768802809000
+prometheus_metrics_table_memory_bytes{name="prometheus_metrics_dist"} 1356
+prometheus_metrics_table_memory_bytes{name="prometheus_metrics"} 1426
 
 # HELP prometheus_metrics_scrape_duration_seconds A histogram of the request duration for prometheus metrics scrape.
 # TYPE prometheus_metrics_scrape_duration_seconds histogram
@@ -137,5 +137,9 @@ for more information on tag usage.
 is further complicated as a time series is created for each bucket plus one for measurements
 exceeding the limit of the last bucket - `+Inf`.*
 
-It is _highly_ recommended to abide by Prometheus' best practices regarding labels -
+It is recommended, but not required, to abide by Prometheus' best practices regarding labels -
 [Label Best Practices](https://prometheus.io/docs/practices/naming/#labels)
+
+You can add a default list of static labels to all of your aggregations on export
+by passing the `:common_tag_values` option on init. This is useful for tags that
+won't change but you need on all time series, e.g. deployed env, service name, etc.
