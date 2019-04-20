@@ -102,8 +102,12 @@ defmodule TelemetryMetricsPrometheus do
   is further complicated as a time series is created for each bucket plus one for measurements
   exceeding the limit of the last bucket - `+Inf`.**
 
-  It is _highly_ recommended to abide by Prometheus' best practices regarding labels -
+  It is recommended, but not required, to abide by Prometheus' best practices regarding labels -
   [Label Best Practices](https://prometheus.io/docs/practices/naming/#labels)
+
+  You can add a default list of static labels to all of your aggregations on export
+  by passing the `:common_tag_values` option on init. This is useful for tags that
+  won't change but you need on all time series, e.g. deployed env, service name, etc.
 
   """
 
@@ -111,6 +115,9 @@ defmodule TelemetryMetricsPrometheus do
   alias TelemetryMetricsPrometheus.{Aggregator, Exporter, Registry, Router}
 
   require Logger
+
+  @typedoc "A keyword list of tags and their values to be added to all exported time series"
+  @type common_tag_values :: [{atom, String.t()}]
 
   @type metric ::
           Metrics.Counter.t()
@@ -125,6 +132,7 @@ defmodule TelemetryMetricsPrometheus do
   @type prometheus_option ::
           {:name, atom()}
           | {:port, pos_integer()}
+          | {:common_tag_values, common_tag_values()}
 
   @typep server_protocol :: :http | :https
 
@@ -132,13 +140,15 @@ defmodule TelemetryMetricsPrometheus do
   Initializes a reporter instance with the provided `Telemetry.Metrics` definitions.
 
   Available options:
+  * `:common_tag_values` - keyword list of tags + values to add to all aggregations
+    on export. Defaults to `[]`
   * `:name` - name of the reporter instance. Defaults to `:prometheus_metrics`
   * `:port` - port number for the reporter instance's server. Defaults to `9568`
   """
   @spec init(metrics(), prometheus_options()) :: :ok
   def init(metrics, options \\ []) when is_list(metrics) and is_list(options) do
     with opts <- ensure_options(options),
-         {:ok, _registry} <- init_registry(opts[:name]),
+         {:ok, _registry} <- init_registry(opts),
          {:ok, _server} <- init_server(opts[:name], opts[:protocol], opts[:port]),
          :ok <- register_metrics(internal_metrics(), opts[:name]),
          :ok <- register_metrics(metrics, opts[:name]),
@@ -169,11 +179,12 @@ defmodule TelemetryMetricsPrometheus do
   def scrape(name \\ :prometheus_metrics) do
     config = Registry.config(name)
     metrics = Registry.metrics(name)
+    common_tag_values = Registry.common_tag_values(name)
 
     :ok = Aggregator.aggregate(metrics, config.aggregates_table_id, config.dist_table_id)
 
     Aggregator.get_time_series(config.aggregates_table_id)
-    |> Exporter.export(metrics)
+    |> Exporter.export(metrics, common_tag_values)
   end
 
   @spec ensure_options(prometheus_options()) :: prometheus_options()
@@ -184,17 +195,18 @@ defmodule TelemetryMetricsPrometheus do
   @spec default_options() :: prometheus_options()
   defp default_options() do
     [
+      common_tag_values: [],
       name: :prometheus_metrics,
       port: 9568,
       protocol: :http
     ]
   end
 
-  @spec init_registry(atom()) :: DynamicSupervisor.on_start_child()
-  defp init_registry(name) do
+  @spec init_registry(keyword()) :: DynamicSupervisor.on_start_child()
+  defp init_registry(opts) do
     DynamicSupervisor.start_child(__MODULE__.DynamicSupervisor, %{
-      id: name,
-      start: {Registry, :start_link, [[name: name]]}
+      id: opts[:name],
+      start: {Registry, :start_link, [opts]}
     })
   end
 

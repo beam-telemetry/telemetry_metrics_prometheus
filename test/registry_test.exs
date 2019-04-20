@@ -12,11 +12,13 @@ defmodule TelemetryMetricsPrometheus.RegistryTest do
       Metrics.sum("cache.invalidations.total")
     ]
 
-    %{definitions: definitions}
+    opts = [name: :test, common_tag_values: []]
+
+    %{definitions: definitions, opts: opts}
   end
 
-  test "registers each metric type", %{definitions: definitions} do
-    {:ok, pid} = Registry.start_link(name: :test)
+  test "registers each metric type", %{definitions: definitions, opts: opts} do
+    {:ok, pid} = Registry.start_link(opts)
 
     Enum.each(definitions, fn definition ->
       result = Registry.register(definition, :test)
@@ -26,8 +28,8 @@ defmodule TelemetryMetricsPrometheus.RegistryTest do
     cleanup(pid)
   end
 
-  test "returns an error for duplicate events", %{definitions: definitions} do
-    {:ok, pid} = Registry.start_link(name: :test)
+  test "returns an error for duplicate events", %{definitions: definitions, opts: opts} do
+    {:ok, pid} = Registry.start_link(opts)
 
     Enum.each(definitions, fn definition ->
       result = Registry.register(definition, :test)
@@ -42,8 +44,8 @@ defmodule TelemetryMetricsPrometheus.RegistryTest do
     cleanup(pid)
   end
 
-  test "retrieves the config" do
-    {:ok, pid} = Registry.start_link(name: :test)
+  test "retrieves the config", %{opts: opts} do
+    {:ok, pid} = Registry.start_link(opts)
     config = Registry.config(:test)
 
     assert Map.has_key?(config, :aggregates_table_id)
@@ -52,8 +54,17 @@ defmodule TelemetryMetricsPrometheus.RegistryTest do
     cleanup(pid)
   end
 
-  test "retrieves the registered metrics", %{definitions: definitions} do
-    {:ok, pid} = Registry.start_link(name: :test)
+  test "retrieves common tag values", %{opts: opts} do
+    {:ok, pid} =
+      Registry.start_link(Keyword.replace!(opts, :common_tag_values, service: "abc", env: "prod"))
+
+    assert Registry.common_tag_values(:test) == [service: "abc", env: "prod"]
+
+    cleanup(pid)
+  end
+
+  test "retrieves the registered metrics", %{definitions: definitions, opts: opts} do
+    {:ok, pid} = Registry.start_link(opts)
 
     Enum.each(definitions, fn definition ->
       Registry.register(definition, :test)

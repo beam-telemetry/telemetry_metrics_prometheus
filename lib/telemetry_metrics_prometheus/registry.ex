@@ -2,6 +2,8 @@ defmodule TelemetryMetricsPrometheus.Registry do
   @moduledoc false
   use GenServer
 
+  @type name :: atom()
+
   require Logger
 
   alias Telemetry.Metrics
@@ -22,6 +24,7 @@ defmodule TelemetryMetricsPrometheus.Registry do
 
     {:ok,
      %{
+       common_tag_values: opts[:common_tag_values],
        config: %{aggregates_table_id: aggregates_table_id, dist_table_id: dist_table_id},
        metrics: []
      }}
@@ -34,14 +37,23 @@ defmodule TelemetryMetricsPrometheus.Registry do
     GenServer.call(name, {:register, metric})
   end
 
-  @spec config(atom()) :: %{aggregates_table_id: atom(), dist_table_id: atom()}
+  @spec common_tag_values(name()) :: TelemetryMetricsPrometheus.common_tag_values()
+  def common_tag_values(name) do
+    GenServer.call(name, :get_common_tag_values)
+  end
+
+  @spec config(name()) :: %{aggregates_table_id: atom(), dist_table_id: atom()}
   def config(name) do
     GenServer.call(name, :get_config)
   end
 
-  @spec metrics(atom()) :: [{TelemetryMetricsPrometheus.metric(), :telemetry.handler_id()}]
+  @spec metrics(name()) :: [{TelemetryMetricsPrometheus.metric(), :telemetry.handler_id()}]
   def metrics(name) do
     GenServer.call(name, :get_metrics)
+  end
+
+  def handle_call(:get_common_tag_values, _from, state) do
+    {:reply, state.common_tag_values, state}
   end
 
   def handle_call(:get_config, _from, state) do
