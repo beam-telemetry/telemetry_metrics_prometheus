@@ -105,19 +105,12 @@ defmodule TelemetryMetricsPrometheus do
   It is recommended, but not required, to abide by Prometheus' best practices regarding labels -
   [Label Best Practices](https://prometheus.io/docs/practices/naming/#labels)
 
-  You can add a default list of static labels to all of your aggregations on export
-  by passing the `:common_tag_values` option on init. This is useful for tags that
-  won't change but you need on all time series, e.g. deployed env, service name, etc.
-
   """
 
   alias Telemetry.Metrics
   alias TelemetryMetricsPrometheus.{Aggregator, Exporter, Registry, Router}
 
   require Logger
-
-  @typedoc "A keyword list of tags and their values to be added to all exported time series"
-  @type common_tag_values :: [{atom, String.t()}]
 
   @type metric ::
           Metrics.Counter.t()
@@ -132,7 +125,6 @@ defmodule TelemetryMetricsPrometheus do
   @type prometheus_option ::
           {:name, atom()}
           | {:port, pos_integer()}
-          | {:common_tag_values, common_tag_values()}
 
   @typep server_protocol :: :http | :https
 
@@ -140,8 +132,6 @@ defmodule TelemetryMetricsPrometheus do
   Initializes a reporter instance with the provided `Telemetry.Metrics` definitions.
 
   Available options:
-  * `:common_tag_values` - keyword list of tags + values to add to all aggregations
-    on export. Defaults to `[]`
   * `:name` - name of the reporter instance. Defaults to `:prometheus_metrics`
   * `:port` - port number for the reporter instance's server. Defaults to `9568`
   """
@@ -179,12 +169,11 @@ defmodule TelemetryMetricsPrometheus do
   def scrape(name \\ :prometheus_metrics) do
     config = Registry.config(name)
     metrics = Registry.metrics(name)
-    common_tag_values = Registry.common_tag_values(name)
 
     :ok = Aggregator.aggregate(metrics, config.aggregates_table_id, config.dist_table_id)
 
     Aggregator.get_time_series(config.aggregates_table_id)
-    |> Exporter.export(metrics, common_tag_values)
+    |> Exporter.export(metrics)
   end
 
   @spec ensure_options(prometheus_options()) :: prometheus_options()
@@ -195,7 +184,6 @@ defmodule TelemetryMetricsPrometheus do
   @spec default_options() :: prometheus_options()
   defp default_options() do
     [
-      common_tag_values: [],
       name: :prometheus_metrics,
       port: 9568,
       protocol: :http
