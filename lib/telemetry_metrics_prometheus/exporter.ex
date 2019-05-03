@@ -2,43 +2,42 @@ defmodule TelemetryMetricsPrometheus.Exporter do
   @moduledoc false
   alias Telemetry.Metrics.{Counter, Distribution, LastValue, Sum}
 
-  def export(time_series, definitions, common_labels) do
+  def export(time_series, definitions) do
     definitions
     |> Stream.map(fn %{name: name} = metric ->
       case time_series[name] do
         nil -> nil
-        ts -> format(metric, ts, common_labels)
+        ts -> format(metric, ts)
       end
     end)
     |> Enum.reject(&is_nil/1)
     |> Enum.join("\n")
   end
 
-  def format(%Counter{} = metric, time_series, common_labels) do
-    format_standard({metric, time_series}, common_labels, "counter")
+  def format(%Counter{} = metric, time_series) do
+    format_standard({metric, time_series}, "counter")
   end
 
-  def format(%LastValue{} = metric, time_series, common_labels) do
-    format_standard({metric, time_series}, common_labels, "gauge")
+  def format(%LastValue{} = metric, time_series) do
+    format_standard({metric, time_series}, "gauge")
   end
 
-  def format(%Sum{} = metric, time_series, common_labels) do
-    format_standard({metric, time_series}, common_labels, "counter")
+  def format(%Sum{} = metric, time_series) do
+    format_standard({metric, time_series}, "counter")
   end
 
-  def format(%Distribution{} = metric, time_series, common_labels) do
+  def format(%Distribution{} = metric, time_series) do
     Enum.map(time_series, fn ts ->
-      format_disribution(metric, ts, common_labels)
+      format_disribution(metric, ts)
     end)
     |> Enum.join("\n")
   end
 
-  def format_disribution(metric, {{_, agg_labels}, {buckets, count, sum}}, common_labels) do
+  def format_disribution(metric, {{_, labels}, {buckets, count, sum}}) do
     name = format_name(metric.name)
     help = "# HELP #{name} #{metric.description}"
     type = "# TYPE #{name} histogram"
 
-    labels = Enum.into(common_labels, agg_labels)
     has_labels = map_size(labels) > 0
 
     samples =
@@ -62,20 +61,19 @@ defmodule TelemetryMetricsPrometheus.Exporter do
     Enum.join([help, type, samples, summary], "\n")
   end
 
-  defp format_standard({metric, time_series}, common_labels, type) do
+  defp format_standard({metric, time_series}, type) do
     name = format_name(metric.name)
     help = "# HELP #{name} #{metric.description}"
     type = "# TYPE #{name} #{type}"
 
     samples =
-      Enum.map_join(time_series, "\n", fn {{_, agg_labels}, agg_val} ->
-        labels = Enum.into(common_labels, agg_labels)
+      Enum.map_join(time_series, "\n", fn {{_, labels}, val} ->
         has_labels = map_size(labels) > 0
 
         if has_labels do
-          "#{name}{#{format_labels(labels)}} #{agg_val}"
+          "#{name}{#{format_labels(labels)}} #{val}"
         else
-          "#{name} #{agg_val}"
+          "#{name} #{val}"
         end
       end)
 

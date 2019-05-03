@@ -109,22 +109,23 @@ conventions. By default, the name provided when creating your definition uses pa
 of the provided name to determine what event to listen to and which event measurement
 to use.
 
-For example, `http.request.duration` results in listening for  `[:http, :request]`
+For example, `"http.request.duration"` results in listening for  `[:http, :request]`
 events and use `:duration` from the event measurements. Prometheus would recommend
-a name of `http_request_duration_seconds` as a good name.
+a name of `"http_request_duration_seconds"` as a good name.
 
 It is therefore recommended to use the name in your definition to reflect the name
-you wish to see reported, e.g. `http.request.duration.seconds` or `[:http, :request, :duration, :seconds]` and use the `:event_name` override and `:measurement` options in your definition.
+you wish to see reported, e.g. `"http.request.duration.seconds"` or `[:http, :request, :duration, :seconds]` and use the `:event_name` override and `:measurement` options in your definition.
 
 Example:
-
+```
 Metrics.distribution(
-"http.request.duration.seconds",
-buckets: [0.01, 0.025, 0.05, 0.1, 0.2, 0.5, 1],
-event_name: [:http, :request, :complete],
-measurement: :duration,
-unit: {:native, :second}
+  "http.request.duration.seconds",
+  buckets: [0.01, 0.025, 0.05, 0.1, 0.2, 0.5, 1],
+  event_name: [:http, :request, :complete],
+  measurement: :duration,
+  unit: {:native, :second}
 )
+```
 
 The exporter sanitizes names to Prometheus' requirements [Naming](https://prometheus.io/docs/instrumenting/writing_exporters/#naming) and joins the event name parts with an underscore.
 
@@ -140,6 +141,18 @@ exceeding the limit of the last bucket - `+Inf`.*
 It is recommended, but not required, to abide by Prometheus' best practices regarding labels -
 [Label Best Practices](https://prometheus.io/docs/practices/naming/#labels)
 
-You can add a default list of static labels to all of your aggregations on export
-by passing the `:common_tag_values` option on init. This is useful for tags that
-won't change but you need on all time series, e.g. deployed env, service name, etc.
+### Included Metrics
+
+Several metrics are exported by default to monitor scrape metrics and internal
+`:ets` table usage.
+
+The metric names are:
+
+  * `"prometheus_metrics_scrape_duration_seconds"`
+  * `"prometheus_metrics_aggregation_duration_seconds"`
+  * `"prometheus_metrics_table_memory_bytes"`
+  * `"prometheus_metrics_table_size_total"`
+
+Please report any abnormally large table usage. Histogram measurements are currently only 
+aggregated at the time of the scrape. We can take a different approach if this proves to be 
+an issue.

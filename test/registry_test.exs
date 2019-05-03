@@ -12,7 +12,7 @@ defmodule TelemetryMetricsPrometheus.RegistryTest do
       Metrics.sum("cache.invalidations.total")
     ]
 
-    opts = [name: :test, common_tag_values: []]
+    opts = [name: :test]
 
     %{definitions: definitions, opts: opts}
   end
@@ -50,15 +50,6 @@ defmodule TelemetryMetricsPrometheus.RegistryTest do
 
     assert Map.has_key?(config, :aggregates_table_id)
     assert Map.has_key?(config, :dist_table_id)
-
-    cleanup(pid)
-  end
-
-  test "retrieves common tag values", %{opts: opts} do
-    {:ok, pid} =
-      Registry.start_link(Keyword.replace!(opts, :common_tag_values, service: "abc", env: "prod"))
-
-    assert Registry.common_tag_values(:test) == [service: "abc", env: "prod"]
 
     cleanup(pid)
   end
