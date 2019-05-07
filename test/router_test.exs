@@ -22,7 +22,7 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
     # Create a test connection
     conn = conn(:get, "/metrics")
 
-    TelemetryMetricsPrometheus.init([], name: :test)
+    TelemetryMetricsPrometheus.init([], [name: :test, port: 9999])
 
     # Invoke the plug
     conn = Router.call(conn, Router.init(name: :test))
@@ -31,5 +31,7 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
     assert conn.state == :sent
     assert conn.status == 200
     assert get_resp_header(conn, "content-type") |> hd() =~ "text/plain"
+
+    TelemetryMetricsPrometheus.stop(:test)
   end
 end
