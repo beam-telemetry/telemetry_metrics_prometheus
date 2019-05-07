@@ -14,6 +14,7 @@ defmodule TelemetryMetricsPrometheus.Router do
 
     conn
     |> Conn.put_private(:prometheus_metrics_name, name)
+    |> Conn.put_resp_content_type("text/plain")
     |> Conn.send_resp(200, metrics)
   end
 
