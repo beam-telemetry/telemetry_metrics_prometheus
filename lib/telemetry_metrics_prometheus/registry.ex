@@ -3,6 +3,8 @@ defmodule TelemetryMetricsPrometheus.Registry do
   use GenServer
 
   @type name :: atom()
+  @type metric_exists_error() :: {:error, :already_exists, TelemetryMetricsPrometheus.metric()}
+  @type unsupported_metric_type_error() :: {:error, :unsupported_metric_type, :summary}
 
   require Logger
 
@@ -29,7 +31,8 @@ defmodule TelemetryMetricsPrometheus.Registry do
      }}
   end
 
-  @spec register(TelemetryMetricsPrometheus.metric(), atom()) :: :ok | {:error, :already_exists}
+  @spec register(TelemetryMetricsPrometheus.metric(), atom()) ::
+          :ok | metric_exists_error() | unsupported_metric_type_error()
   def register(metric, name \\ __MODULE__) do
     # validate metrics units ?
 
@@ -58,7 +61,7 @@ defmodule TelemetryMetricsPrometheus.Registry do
   @impl true
   @spec handle_call({:register, TelemetryMetricsPrometheus.metric()}, GenServer.from(), map()) ::
           {:reply, :ok, map()}
-          | {:reply, {:error, :already_exists, TelemetryMetricsPrometheus.metric()}, map()}
+          | {:reply, metric_exists_error() | unsupported_metric_type_error(), map()}
 
   def handle_call({:register, %Metrics.Counter{} = metric}, _from, state) do
     with {:ok, handler_id} <- Counter.register(metric, state.config.aggregates_table_id, self()) do
@@ -96,6 +99,10 @@ defmodule TelemetryMetricsPrometheus.Registry do
     else
       {:error, :already_exists} -> {:reply, {:error, :already_exists, metric.name}, state}
     end
+  end
+
+  def handle_call({:register, %Metrics.Summary{} = _metric}, _from, state) do
+    {:reply, {:error, :unsupported_metric_type, :summary}, state}
   end
 
   @spec create_table(name :: atom, type :: atom) :: :ets.tid() | atom

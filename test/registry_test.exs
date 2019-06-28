@@ -9,7 +9,8 @@ defmodule TelemetryMetricsPrometheus.RegistryTest do
       Metrics.counter("http.request.count"),
       Metrics.distribution("some.plug.call.duration", buckets: [0, 1, 2]),
       Metrics.last_value("vm.memory.total"),
-      Metrics.sum("cache.invalidations.total")
+      Metrics.sum("cache.invalidations.total"),
+      Metrics.summary("http.request.duration")
     ]
 
     opts = [name: :test]
@@ -17,47 +18,57 @@ defmodule TelemetryMetricsPrometheus.RegistryTest do
     %{definitions: definitions, opts: opts}
   end
 
-  test "registers each metric type", %{definitions: definitions, opts: opts} do
-    {:ok, pid} = Registry.start_link(opts)
+  test "registers each supported metric type", %{definitions: definitions, opts: opts} do
+    {:ok, _pid} = start_supervised({Registry, opts})
 
-    Enum.each(definitions, fn definition ->
+    definitions
+    |> Enum.each(fn definition ->
       result = Registry.register(definition, :test)
-      assert(result == :ok)
+
+      if match?(%Metrics.Summary{}, definition) do
+        assert(result == {:error, :unsupported_metric_type, :summary})
+      else
+        assert(result == :ok)
+      end
     end)
 
-    cleanup(pid)
+    cleanup()
   end
 
   test "returns an error for duplicate events", %{definitions: definitions, opts: opts} do
-    {:ok, pid} = Registry.start_link(opts)
+    {:ok, _pid} = start_supervised({Registry, opts})
 
-    Enum.each(definitions, fn definition ->
+    supported_defs = Enum.reject(definitions, &match?(%Metrics.Summary{}, &1))
+
+    Enum.each(supported_defs, fn definition ->
       result = Registry.register(definition, :test)
       assert(result == :ok)
     end)
 
-    Enum.each(definitions, fn definition ->
+    Enum.each(supported_defs, fn definition ->
       result = Registry.register(definition, :test)
       assert(result == {:error, :already_exists, definition.name})
     end)
 
-    cleanup(pid)
+    cleanup()
   end
 
   test "retrieves the config", %{opts: opts} do
-    {:ok, pid} = Registry.start_link(opts)
+    {:ok, _pid} = start_supervised({Registry, opts})
     config = Registry.config(:test)
 
     assert Map.has_key?(config, :aggregates_table_id)
     assert Map.has_key?(config, :dist_table_id)
 
-    cleanup(pid)
+    cleanup()
   end
 
   test "retrieves the registered metrics", %{definitions: definitions, opts: opts} do
-    {:ok, pid} = Registry.start_link(opts)
+    {:ok, _pid} = start_supervised({Registry, opts})
 
-    Enum.each(definitions, fn definition ->
+    supported_defs = Enum.reject(definitions, &match?(%Metrics.Summary{}, &1))
+
+    Enum.each(supported_defs, fn definition ->
       Registry.register(definition, :test)
     end)
 
@@ -71,12 +82,10 @@ defmodule TelemetryMetricsPrometheus.RegistryTest do
       _ -> flunk("non-metric returned")
     end)
 
-    cleanup(pid)
+    cleanup()
   end
 
-  defp cleanup(pid) do
-    GenServer.stop(pid)
-
+  defp cleanup() do
     :telemetry.list_handlers([])
     |> Enum.each(&:telemetry.detach(&1.id))
   end
