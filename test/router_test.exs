@@ -8,7 +8,7 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
     # Create a test connection
     conn = conn(:get, "/missing")
 
-    TelemetryMetricsPrometheus.init([], name: :test, port: 9999)
+    TelemetryMetricsPrometheus.init([], name: :test, port: 9999, validations: false)
 
     # Invoke the plug
     conn = Router.call(conn, Router.init(name: :test))
@@ -24,7 +24,7 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
     # Create a test connection
     conn = conn(:get, "/metrics")
 
-    TelemetryMetricsPrometheus.init([], name: :test, port: 9999)
+    TelemetryMetricsPrometheus.init([], name: :test, port: 9999, validations: false)
 
     # Invoke the plug
     conn = Router.call(conn, Router.init(name: :test))
