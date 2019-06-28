@@ -110,7 +110,7 @@ defmodule TelemetryMetricsPrometheus.Registry do
 
     DynamicSupervisor.start_child(
       TelemetryMetricsPrometheus.DynamicSupervisor,
-      {Telemetry.Poller, [measurements: measurement_specs]}
+      {:telemetry_poller, [measurements: measurement_specs]}
     )
   end
 end
