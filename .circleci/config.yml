@@ -67,15 +67,15 @@ workflows:
   build_and_test:
     jobs:
       - telemetry_metrics_prometheus/build_and_test:
-          name: "1.8-otp-21"
-          elixir: "1.8.1"
-          otp: "21"
-          codecov_flag: "1_8_otp21"
+          name: "1.9-otp-22"
+          elixir: "1.9.0"
+          otp: "22"
+          codecov_flag: "1_9_otp22"
       - telemetry_metrics_prometheus/build_and_test:
-          name: "1.8-otp-20"
-          elixir: "1.8.1"
+          name: "1.9-otp-20"
+          elixir: "1.9.0"
           otp: "20"
-          codecov_flag: "1_8_otp20"
+          codecov_flag: "1_9_otp20"
       - telemetry_metrics_prometheus/build_and_test:
           name: "1.6-otp-21"
           elixir: "1.6.6"
