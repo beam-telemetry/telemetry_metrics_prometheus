@@ -71,9 +71,10 @@ you're reporting a large number of disributions or you have a high tag cardinali
 
 Metric types:
 * Counter - Counter
-* Distribution - Histogram (Summaries are not supported at this time)
+* Distribution - Histogram
 * LastValue - Gauge
 * Sum - Counter
+* Summary - Summary (Not supported)
 
 ### Units
 

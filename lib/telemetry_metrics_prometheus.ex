@@ -36,9 +36,10 @@ defmodule TelemetryMetricsPrometheus do
 
   Metric types:
     * Counter - Counter
-    * Distribution - Histogram (Summaries are not supported at this time)
+    * Distribution - Histogram
     * LastValue - Gauge
     * Sum - Counter
+    * Summary - Summary (Not supported)
 
   ### Units
 
@@ -117,6 +118,7 @@ defmodule TelemetryMetricsPrometheus do
           | Metrics.Distribution.t()
           | Metrics.LastValue.t()
           | Metrics.Sum.t()
+          | Metrics.Summary.t()
 
   @type metrics :: [metric()]
 
@@ -215,8 +217,17 @@ defmodule TelemetryMetricsPrometheus do
         :ok ->
           metric
 
-        {:error, :already_exists} ->
-          Logger.warn("Metric name already exists. Dropping measure. metric_name:=#{metric.name}")
+        {:error, :already_exists, metric_name} ->
+          Logger.warn(
+            "Metric name already exists. Dropping measure. metric_name:=#{inspect(metric_name)}"
+          )
+
+        {:error, :unsupported_metric_type, metric_type} ->
+          Logger.warn(
+            "Metric type #{metric_type} is unsupported. Dropping measure. metric_name:=#{
+              inspect(metric.name)
+            }"
+          )
       end
     end)
   end

@@ -1,5 +1,7 @@
 defmodule TelemetryMetricsPrometheusTest do
   use ExUnit.Case
+  import ExUnit.CaptureLog
+
   import TelemetryMetricsPrometheus, only: [init: 2, scrape: 1, stop: 1]
   alias Telemetry.Metrics
 
@@ -26,6 +28,19 @@ defmodule TelemetryMetricsPrometheusTest do
     metrics_scrape = scrape(:test_reporter)
 
     assert metrics_scrape =~ "http_request_total"
+
+    stop(:test_reporter)
+  end
+
+  test "logs an error for unsupported metric types" do
+    metrics = [
+      Metrics.summary("http.request.duration")
+    ]
+
+    assert capture_log(fn ->
+             opts = [name: :test_reporter]
+             :ok = init(metrics, opts)
+           end) =~ "Metric type summary is unsupported."
 
     stop(:test_reporter)
   end
