@@ -127,6 +127,7 @@ defmodule TelemetryMetricsPrometheus do
   @type prometheus_option ::
           {:name, atom()}
           | {:port, pos_integer()}
+          | {:monitor_reporter, bool()}
 
   @typep server_protocol :: :http | :https
 
@@ -136,6 +137,7 @@ defmodule TelemetryMetricsPrometheus do
   Available options:
   * `:name` - name of the reporter instance. Defaults to `:prometheus_metrics`
   * `:port` - port number for the reporter instance's server. Defaults to `9568`
+  * `:monitor_reporter` - collects metrics on the reporter's ETS table usage. Defaults to `false`
   """
   @spec init(metrics(), prometheus_options()) :: :ok
   def init(metrics, options \\ []) when is_list(metrics) and is_list(options) do
@@ -144,10 +146,14 @@ defmodule TelemetryMetricsPrometheus do
          {:ok, _server} <- init_server(opts[:name], opts[:protocol], opts[:port]),
          :ok <- register_metrics(internal_metrics(), opts[:name]),
          :ok <- register_metrics(metrics, opts[:name]),
-         config <- Registry.config(opts[:name]),
-         {:ok, _poller_id} <-
-           Registry.monitor_tables([config.aggregates_table_id, config.dist_table_id]),
-         do: :ok
+         config <- Registry.config(opts[:name]) do
+      if opts[:monitor_reporter] do
+        {:ok, _poller_id} =
+          Registry.monitor_tables([config.aggregates_table_id, config.dist_table_id])
+      end
+
+      :ok
+    end
   end
 
   @doc false
@@ -188,7 +194,8 @@ defmodule TelemetryMetricsPrometheus do
     [
       name: :prometheus_metrics,
       port: 9568,
-      protocol: :http
+      protocol: :http,
+      monitor_reporter: false
     ]
   end
 

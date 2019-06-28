@@ -144,15 +144,21 @@ It is recommended, but not required, to abide by Prometheus' best practices rega
 
 ### Included Metrics
 
-Several metrics are exported by default to monitor scrape metrics and internal
-`:ets` table usage.
+Several metrics are exported by default to monitor scrape metrics.
 
 The metric names are:
 
   * `"prometheus_metrics_scrape_duration_seconds"`
   * `"prometheus_metrics_aggregation_duration_seconds"`
+
+Optionally, you can monitor internal `:ets` table usage by setting `monitor_reporter: true`
+in your `init` options.
+
+The metric names for this setting are:
+
   * `"prometheus_metrics_table_memory_bytes"`
   * `"prometheus_metrics_table_size_total"`
+
 
 Please report any abnormally large table usage. Histogram measurements are currently only 
 aggregated at the time of the scrape. We can take a different approach if this proves to be 
