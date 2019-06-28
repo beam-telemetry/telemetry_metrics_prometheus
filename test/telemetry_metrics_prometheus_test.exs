@@ -14,7 +14,7 @@ defmodule TelemetryMetricsPrometheusTest do
       )
     ]
 
-    opts = [name: :test_reporter, validations: false]
+    opts = [name: :test_reporter, validations: [require_seconds: false]]
     :ok = init(metrics, opts)
 
     assert :ets.info(:test_reporter) != :undefined
