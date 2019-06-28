@@ -44,4 +44,20 @@ defmodule TelemetryMetricsPrometheusTest do
 
     stop(:test_reporter)
   end
+
+  test "supports monitoring the health of the reporter itself" do
+    :ok = init([], name: :test_reporter, monitor_reporter: true)
+    children = DynamicSupervisor.which_children(TelemetryMetricsPrometheus.DynamicSupervisor)
+
+    assert Enum.any?(children, &match?({_, _, :worker, [:telemetry_poller]}, &1))
+    stop(:test_reporter)
+  end
+
+  test "reporter health monitoring is off by default" do
+    :ok = init([], name: :test_reporter)
+    children = DynamicSupervisor.which_children(TelemetryMetricsPrometheus.DynamicSupervisor)
+
+    refute Enum.any?(children, &match?({_, _, :worker, [:telemetry_poller]}, &1))
+    stop(:test_reporter)
+  end
 end
