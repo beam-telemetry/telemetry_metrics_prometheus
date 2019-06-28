@@ -4,6 +4,8 @@ defmodule TelemetryMetricsPrometheus.RegistryTest do
   alias Telemetry.Metrics
   alias TelemetryMetricsPrometheus.Registry
 
+  import ExUnit.CaptureLog
+
   setup do
     definitions = [
       Metrics.counter("http.request.count"),
@@ -51,6 +53,35 @@ defmodule TelemetryMetricsPrometheus.RegistryTest do
     end)
 
     cleanup()
+  end
+
+  test "validates for units" do
+    metrics = [
+      Metrics.distribution("some.plug.call.duration",
+        buckets: [0, 1, 2],
+        unit: {:microsecond, :millisecond}
+      ),
+      Metrics.distribution("some_other.plug.call.duration",
+        buckets: [0, 1, 2],
+        unit: {:microsecond, :second}
+      ),
+      Metrics.distribution("some_third.plug.call.duration", buckets: [0, 1, 2], unit: :millisecond),
+      Metrics.counter("http.request.count", unit: :byte)
+    ]
+
+    assert capture_log(fn ->
+             Registry.validate_units(metrics,
+               consistent_units: true,
+               require_seconds: false
+             )
+           end) =~ "Multiple time units found"
+
+    assert capture_log(fn ->
+             Registry.validate_units(metrics,
+               consistent_units: false,
+               require_seconds: true
+             )
+           end) =~ "Prometheus requires that time units MUST only be offered in seconds"
   end
 
   test "retrieves the config", %{opts: opts} do

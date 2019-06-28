@@ -128,6 +128,7 @@ defmodule TelemetryMetricsPrometheus do
           {:name, atom()}
           | {:port, pos_integer()}
           | {:monitor_reporter, bool()}
+          | {:validations, Registry.validation_opts() | false}
 
   @typep server_protocol :: :http | :https
 
@@ -138,14 +139,17 @@ defmodule TelemetryMetricsPrometheus do
   * `:name` - name of the reporter instance. Defaults to `:prometheus_metrics`
   * `:port` - port number for the reporter instance's server. Defaults to `9568`
   * `:monitor_reporter` - collects metrics on the reporter's ETS table usage. Defaults to `false`
+  * `:validations` - Keyword options list to control validations. All validations can be disabled by setting `validations: false`.
+    * `:consistent_units` - logs a warning when mixed time units are found in your definitions. Defaults to `true`
+    * `:require_seconds` - logs a warning if units other than seconds are found in your definitions. Defaults to `true`
   """
   @spec init(metrics(), prometheus_options()) :: :ok
   def init(metrics, options \\ []) when is_list(metrics) and is_list(options) do
     with opts <- ensure_options(options),
          {:ok, _registry} <- init_registry(opts),
          {:ok, _server} <- init_server(opts[:name], opts[:protocol], opts[:port]),
-         :ok <- register_metrics(internal_metrics(), opts[:name]),
-         :ok <- register_metrics(metrics, opts[:name]),
+         :ok <- register_metrics(internal_metrics(), opts[:name], opts[:validations]),
+         :ok <- register_metrics(metrics, opts[:name], opts[:validations]),
          config <- Registry.config(opts[:name]) do
       if opts[:monitor_reporter] do
         {:ok, _poller_id} =
@@ -186,7 +190,10 @@ defmodule TelemetryMetricsPrometheus do
 
   @spec ensure_options(prometheus_options()) :: prometheus_options()
   defp ensure_options(options) do
+    validation_opts = ensure_validation_options(Keyword.get(options, :validations, []))
+
     Keyword.merge(default_options(), options)
+    |> Keyword.put(:validations, validation_opts)
   end
 
   @spec default_options() :: prometheus_options()
@@ -195,9 +202,25 @@ defmodule TelemetryMetricsPrometheus do
       name: :prometheus_metrics,
       port: 9568,
       protocol: :http,
-      monitor_reporter: false
+      monitor_reporter: false,
+      validations: default_validation_options()
     ]
   end
+
+  @spec ensure_validation_options(bool() | Registry.validation_opts()) ::
+          Registry.validation_opts()
+  defp ensure_validation_options(false), do: default_validation_options(false)
+
+  defp ensure_validation_options(opts) do
+    Keyword.merge(default_validation_options(), opts)
+  end
+
+  @spec default_validation_options(bool()) :: Registry.validation_opts()
+  defp default_validation_options(on \\ true),
+    do: [
+      consistent_units: on,
+      require_seconds: on
+    ]
 
   @spec init_registry(keyword()) :: DynamicSupervisor.on_start_child()
   defp init_registry(opts) do
@@ -216,9 +239,10 @@ defmodule TelemetryMetricsPrometheus do
     )
   end
 
-  @spec register_metrics(metrics(), atom()) :: :ok
-  defp register_metrics(metrics, name) do
+  @spec register_metrics(metrics(), atom(), Registry.validation_opts()) :: :ok
+  defp register_metrics(metrics, name, validations) do
     metrics
+    |> Registry.validate_units(validations)
     |> Enum.each(fn metric ->
       case Registry.register(metric, name) do
         :ok ->

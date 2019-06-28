@@ -14,7 +14,7 @@ defmodule TelemetryMetricsPrometheusTest do
       )
     ]
 
-    opts = [name: :test_reporter]
+    opts = [name: :test_reporter, validations: [require_seconds: false]]
     :ok = init(metrics, opts)
 
     assert :ets.info(:test_reporter) != :undefined
@@ -38,7 +38,7 @@ defmodule TelemetryMetricsPrometheusTest do
     ]
 
     assert capture_log(fn ->
-             opts = [name: :test_reporter]
+             opts = [name: :test_reporter, validations: false]
              :ok = init(metrics, opts)
            end) =~ "Metric type summary is unsupported."
 
@@ -46,7 +46,7 @@ defmodule TelemetryMetricsPrometheusTest do
   end
 
   test "supports monitoring the health of the reporter itself" do
-    :ok = init([], name: :test_reporter, monitor_reporter: true)
+    :ok = init([], name: :test_reporter, monitor_reporter: true, validations: false)
     children = DynamicSupervisor.which_children(TelemetryMetricsPrometheus.DynamicSupervisor)
 
     assert Enum.any?(children, &match?({_, _, :worker, [:telemetry_poller]}, &1))
@@ -54,7 +54,7 @@ defmodule TelemetryMetricsPrometheusTest do
   end
 
   test "reporter health monitoring is off by default" do
-    :ok = init([], name: :test_reporter)
+    :ok = init([], name: :test_reporter, validations: false)
     children = DynamicSupervisor.which_children(TelemetryMetricsPrometheus.DynamicSupervisor)
 
     refute Enum.any?(children, &match?({_, _, :worker, [:telemetry_poller]}, &1))
