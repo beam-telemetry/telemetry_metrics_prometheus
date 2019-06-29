@@ -30,7 +30,7 @@ defmodule TelemetryMetricsPrometheus.MixProject do
       {:dialyxir, "~> 1.0.0-rc.6", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.20.2", only: [:dev, :docs]},
       {:excoveralls, "~> 0.10.6", only: :test, runtime: false},
-      {:plug_cowboy, "~> 2.0"},
+      {:plug_cowboy, "~> 2.1"},
       {:telemetry, "~> 0.4"},
       {:telemetry_metrics, "~> 0.3"},
       {:telemetry_poller, "~> 0.4"}
