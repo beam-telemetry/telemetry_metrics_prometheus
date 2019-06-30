@@ -25,7 +25,7 @@ list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:telemetry_metrics_prometheus, "~> 0.1.0"}
+    {:telemetry_metrics_prometheus, "~> 0.2"}
   ]
 end
 ```
