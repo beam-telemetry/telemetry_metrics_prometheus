@@ -153,7 +153,7 @@ defmodule TelemetryMetricsPrometheus do
          config <- Registry.config(opts[:name]) do
       if opts[:monitor_reporter] do
         {:ok, _poller_id} =
-          Registry.monitor_tables([config.aggregates_table_id, config.dist_table_id])
+          Registry.monitor_tables([config.aggregates_table_id, config.dist_table_id], opts[:name])
       end
 
       :ok
