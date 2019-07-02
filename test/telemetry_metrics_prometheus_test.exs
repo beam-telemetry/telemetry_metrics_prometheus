@@ -60,4 +60,18 @@ defmodule TelemetryMetricsPrometheusTest do
     refute Enum.any?(children, &match?({_, _, :worker, [:telemetry_poller]}, &1))
     stop(:test_reporter)
   end
+
+  test "doesn't interfere with other telemetry_poller instances by default" do
+    :ok = init([], name: :test_reporter, validations: false, monitor_reporter: true)
+    children = DynamicSupervisor.which_children(TelemetryMetricsPrometheus.DynamicSupervisor)
+
+    assert Enum.any?(children, &match?({_, _, :worker, [:telemetry_poller]}, &1))
+
+    result = start_supervised(
+      {:telemetry_poller, [period: 10, measurements: [], vm_measurements: [:memory]]}
+    )
+
+    assert elem(result, 0) == :ok
+    stop(:test_reporter)
+  end
 end
