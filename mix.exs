@@ -31,9 +31,7 @@ defmodule TelemetryMetricsPrometheus.MixProject do
       {:ex_doc, "~> 0.20.2", only: [:dev, :docs]},
       {:excoveralls, "~> 0.10.6", only: :test, runtime: false},
       {:plug_cowboy, "~> 2.1"},
-      {:telemetry, "~> 0.4"},
-      {:telemetry_metrics, "~> 0.3"},
-      {:telemetry_poller, "~> 0.4"}
+      {:telemetry_metrics_prometheus_core, "~> 0.1"}
     ]
   end
 

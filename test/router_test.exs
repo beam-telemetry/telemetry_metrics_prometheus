@@ -4,6 +4,10 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
 
   alias TelemetryMetricsPrometheus.Router
 
+  setup do
+    on_exit(fn -> stop(:test) end)
+  end
+
   test "returns a 404 for a non-matching route" do
     # Create a test connection
     conn = conn(:get, "/missing")
@@ -16,8 +20,6 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
     # Assert the response and status
     assert conn.state == :sent
     assert conn.status == 404
-
-    TelemetryMetricsPrometheus.stop(:test)
   end
 
   test "returns a scrape" do
@@ -33,7 +35,10 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
     assert conn.state == :sent
     assert conn.status == 200
     assert get_resp_header(conn, "content-type") |> hd() =~ "text/plain"
+  end
 
-    TelemetryMetricsPrometheus.stop(:test)
+  defp stop(name) do
+    TelemetryMetricsPrometheus.stop(name)
+    TelemetryMetricsPrometheus.Core.stop(name)
   end
 end

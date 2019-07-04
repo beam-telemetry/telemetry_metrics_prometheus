@@ -2,8 +2,12 @@ defmodule TelemetryMetricsPrometheusTest do
   use ExUnit.Case
   import ExUnit.CaptureLog
 
-  import TelemetryMetricsPrometheus, only: [init: 2, scrape: 1, stop: 1]
+  import TelemetryMetricsPrometheus, only: [init: 2]
   alias Telemetry.Metrics
+
+  setup do
+    on_exit(fn -> stop(:test_reporter) end)
+  end
 
   test "initializes properly" do
     metrics = [
@@ -25,7 +29,7 @@ defmodule TelemetryMetricsPrometheusTest do
       code: 200
     })
 
-    metrics_scrape = scrape(:test_reporter)
+    metrics_scrape = TelemetryMetricsPrometheus.Core.scrape(:test_reporter)
 
     assert metrics_scrape =~ "http_request_total"
 
@@ -45,33 +49,8 @@ defmodule TelemetryMetricsPrometheusTest do
     stop(:test_reporter)
   end
 
-  test "supports monitoring the health of the reporter itself" do
-    :ok = init([], name: :test_reporter, monitor_reporter: true, validations: false)
-    children = DynamicSupervisor.which_children(TelemetryMetricsPrometheus.DynamicSupervisor)
-
-    assert Enum.any?(children, &match?({_, _, :worker, [:telemetry_poller]}, &1))
-    stop(:test_reporter)
-  end
-
-  test "reporter health monitoring is off by default" do
-    :ok = init([], name: :test_reporter, validations: false)
-    children = DynamicSupervisor.which_children(TelemetryMetricsPrometheus.DynamicSupervisor)
-
-    refute Enum.any?(children, &match?({_, _, :worker, [:telemetry_poller]}, &1))
-    stop(:test_reporter)
-  end
-
-  test "doesn't interfere with other telemetry_poller instances by default" do
-    :ok = init([], name: :test_reporter, validations: false, monitor_reporter: true)
-    children = DynamicSupervisor.which_children(TelemetryMetricsPrometheus.DynamicSupervisor)
-
-    assert Enum.any?(children, &match?({_, _, :worker, [:telemetry_poller]}, &1))
-
-    result = start_supervised(
-      {:telemetry_poller, [period: 10, measurements: [], vm_measurements: [:memory]]}
-    )
-
-    assert elem(result, 0) == :ok
-    stop(:test_reporter)
+  defp stop(name) do
+    TelemetryMetricsPrometheus.stop(name)
+    TelemetryMetricsPrometheus.Core.stop(name)
   end
 end
