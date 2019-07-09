@@ -10,7 +10,7 @@ defmodule TelemetryMetricsPrometheus.Router do
 
   get "/metrics" do
     name = opts[:name]
-    metrics = TelemetryMetricsPrometheus.scrape(name)
+    metrics = TelemetryMetricsPrometheus.Core.scrape(name)
 
     conn
     |> Conn.put_private(:prometheus_metrics_name, name)
