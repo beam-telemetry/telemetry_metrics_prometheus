@@ -3,23 +3,25 @@ defmodule TelemetryMetricsPrometheus do
   Prometheus Reporter for [`Telemetry.Metrics`](https://github.com/beam-telemetry/telemetry_metrics) definitions.
 
   Provide a list of metric definitions to the `init/2` function. It's recommended to
-  initialize the reporter during application startup.
+  run TelemetryMetricsPrometheus under a supervision tree, usually under Application.
 
       def start(_type, _args) do
-        TelemetryMetricsPrometheus.init([
-          counter("http.request.count"),
-          sum("http.request.payload_size", unit: :byte),
-          last_value("vm.memory.total", unit: :byte)
-        ])
-
         # List all child processes to be supervised
         children = [
+          {TelemetryMetricsPrometheus, [metrics: metrics()]}
         ...
         ]
 
         opts = [strategy: :one_for_one, name: ExampleApp.Supervisor]
         Supervisor.start_link(children, opts)
       end
+
+      defp metrics, do:
+        [
+          counter("http.request.count"),
+          sum("http.request.payload_size", unit: :byte),
+          last_value("vm.memory.total", unit: :byte)
+        ]
 
   By default, metrics are exposed on port `9568` at `/metrics`. The port number
   can be configured if necessary. You are not required to use the included server,
@@ -32,58 +34,70 @@ defmodule TelemetryMetricsPrometheus do
   types and units.
   """
 
-  alias TelemetryMetricsPrometheus.Router
-
   require Logger
 
-  @type metrics :: [TelemetryMetricsPrometheus.Core.metric()]
+  @type option ::
+          TelemetryMetricsPrometheus.Core.prometheus_option()
+          | {:port, pos_integer()}
+          | {:metrics, TelemetryMetricsPrometheus.Core.metrics()}
 
-  @type prometheus_options :: [
-          server_option() | TelemetryMetricsPrometheus.Core.prometheus_option()
-        ]
-  @type server_options :: [server_option()]
-  @type server_option :: {:port, pos_integer()}
-  @typep server_protocol :: :http | :https
+  @type options :: [option]
 
   @doc """
-  Initializes a reporter instance with the provided `Telemetry.Metrics` definitions.
+  Reporter's child spec.
+
+  This function allows you to start the reporter under a supervisor like this:
+
+      children = [
+        {TelemetryMetricsPrometheus, options}
+      ]
+
+
+  See `start_link/1` for a list of available options.
+
+  Returns a child specification to supervise the process.
+  """
+  @spec child_spec(options()) :: Supervisor.child_spec()
+  def child_spec(options) do
+    opts = ensure_options(options)
+
+    id =
+      case Keyword.get(opts, :name, :prometheus_metrics) do
+        name when is_atom(name) -> name
+        {:global, name} -> name
+        {:via, _, name} -> name
+      end
+
+    spec = %{
+      id: id,
+      start: {TelemetryMetricsPrometheus.Supervisor, :start_link, [opts]}
+    }
+
+    Supervisor.child_spec(spec, [])
+  end
+
+  @doc """
+  Starts a reporter and links it to the calling process.
 
   Available options:
+  * `:metrics` - a list of `Telemetry.Metrics` definitions to monitor. **required**
+  * `:name` - the name to set the process's id to. Defaults to `:prometheus_metrics`
   * `:port` - port number for the reporter instance's server. Defaults to `9568`
 
   All other options are forwarded to `TelemetryMetricsPrometheus.Core.init/2`.
   """
-  @spec init(metrics(), prometheus_options()) :: :ok
-  def init(metrics, options \\ []) when is_list(metrics) and is_list(options) do
-    opts = Keyword.merge(default_options(), options)
-    name = Keyword.get(options, :name, :prometheus_metrics)
-
-    with :ok <- TelemetryMetricsPrometheus.Core.init(metrics, options),
-         {:ok, _server} <- init_server(name, opts[:protocol], opts[:port]) do
-      :ok
-    end
+  @spec start_link(options()) :: GenServer.on_start()
+  def start_link(options) do
+    ensure_options(options)
+    |> TelemetryMetricsPrometheus.Supervisor.start_link()
   end
 
-  @doc false
-  def stop(_name) do
-    # Stop everything for now. This can be refined later.
-    DynamicSupervisor.which_children(__MODULE__.DynamicSupervisor)
-    |> Enum.map(fn {:undefined, pid, _, _} ->
-      DynamicSupervisor.terminate_child(__MODULE__.DynamicSupervisor, pid)
-    end)
+  defp ensure_options(options) do
+    Keyword.merge(default_options(), options)
   end
 
-  @spec default_options() :: server_options()
+  @spec default_options() :: options()
   defp default_options() do
-    [port: 9568, protocol: :http]
-  end
-
-  @spec init_server(atom(), server_protocol(), pos_integer()) ::
-          DynamicSupervisor.on_start_child()
-  defp init_server(name, scheme, port) do
-    DynamicSupervisor.start_child(
-      __MODULE__.DynamicSupervisor,
-      {Plug.Cowboy, scheme: scheme, plug: {Router, [name: name]}, options: [port: port]}
-    )
+    [port: 9568, protocol: :http, name: :prometheus_metrics]
   end
 end

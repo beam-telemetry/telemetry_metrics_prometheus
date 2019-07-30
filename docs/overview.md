@@ -14,16 +14,23 @@ your application startup.
 
 ```elixir
 def start(_type, _args) do
-  TelemetryMetricsPrometheus.init([])
-  
   # List all child processes to be supervised
   children = [
+    {TelemetryMetricsPrometheus, [metrics: metrics()]}
     ...
   ]
 
   opts = [strategy: :one_for_one, name: ExampleApp.Supervisor]
   Supervisor.start_link(children, opts)
 end
+
+defp metrics, do:
+  [
+    counter("http.request.count"),
+    sum("http.request.payload_size", unit: :byte),
+    last_value("vm.memory.total", unit: :byte)
+  ]
+
 ```
 
 There are a few metrics built into `TelemetryMetricsPrometheus` to 
