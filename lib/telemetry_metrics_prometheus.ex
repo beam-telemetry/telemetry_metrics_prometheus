@@ -98,6 +98,6 @@ defmodule TelemetryMetricsPrometheus do
 
   @spec default_options() :: options()
   defp default_options() do
-    [port: 9568, protocol: :http]
+    [port: 9568, protocol: :http, name: :prometheus_metrics]
   end
 end
