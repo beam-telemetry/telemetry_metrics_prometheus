@@ -20,8 +20,7 @@ defmodule TelemetryMetricsPrometheus.MixProject do
 
   def application do
     [
-      extra_applications: [:logger],
-      mod: {TelemetryMetricsPrometheus.Application, []}
+      extra_applications: [:logger]
     ]
   end
 
@@ -31,7 +30,7 @@ defmodule TelemetryMetricsPrometheus.MixProject do
       {:ex_doc, "~> 0.20.2", only: [:dev, :docs]},
       {:excoveralls, "~> 0.10.6", only: :test, runtime: false},
       {:plug_cowboy, "~> 2.1"},
-      {:telemetry_metrics_prometheus_core, "~> 0.1"}
+      {:telemetry_metrics_prometheus_core, "~> 0.2"}
     ]
   end
 

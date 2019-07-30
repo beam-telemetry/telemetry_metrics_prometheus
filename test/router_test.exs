@@ -4,15 +4,16 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
 
   alias TelemetryMetricsPrometheus.Router
 
-  setup do
-    on_exit(fn -> stop(:test) end)
-  end
-
   test "returns a 404 for a non-matching route" do
     # Create a test connection
     conn = conn(:get, "/missing")
 
-    TelemetryMetricsPrometheus.init([], name: :test, port: 9999, validations: false)
+    _pid =
+      start_supervised!(
+        {TelemetryMetricsPrometheus, [metrics: [], name: :test, port: 9999, validations: false]}
+      )
+
+    Process.sleep(10)
 
     # Invoke the plug
     conn = Router.call(conn, Router.init(name: :test))
@@ -26,7 +27,12 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
     # Create a test connection
     conn = conn(:get, "/metrics")
 
-    TelemetryMetricsPrometheus.init([], name: :test, port: 9999, validations: false)
+    _pid =
+      start_supervised!(
+        {TelemetryMetricsPrometheus, [metrics: [], name: :test, port: 9999, validations: false]}
+      )
+
+    Process.sleep(10)
 
     # Invoke the plug
     conn = Router.call(conn, Router.init(name: :test))
@@ -35,10 +41,5 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
     assert conn.state == :sent
     assert conn.status == 200
     assert get_resp_header(conn, "content-type") |> hd() =~ "text/plain"
-  end
-
-  defp stop(name) do
-    TelemetryMetricsPrometheus.stop(name)
-    TelemetryMetricsPrometheus.Core.stop(name)
   end
 end

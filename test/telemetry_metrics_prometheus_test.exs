@@ -1,13 +1,8 @@
 defmodule TelemetryMetricsPrometheusTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
   import ExUnit.CaptureLog
 
-  import TelemetryMetricsPrometheus, only: [init: 2]
   alias Telemetry.Metrics
-
-  setup do
-    on_exit(fn -> stop(:test_reporter) end)
-  end
 
   test "initializes properly" do
     metrics = [
@@ -18,8 +13,11 @@ defmodule TelemetryMetricsPrometheusTest do
       )
     ]
 
-    opts = [name: :test_reporter, validations: [require_seconds: false]]
-    :ok = init(metrics, opts)
+    opts = [metrics: metrics, name: :test_reporter, validations: [require_seconds: false]]
+
+    _pid = start_supervised!({TelemetryMetricsPrometheus, opts})
+
+    Process.sleep(10)
 
     assert :ets.info(:test_reporter) != :undefined
     assert :ets.info(:test_reporter_dist) != :undefined
@@ -32,8 +30,6 @@ defmodule TelemetryMetricsPrometheusTest do
     metrics_scrape = TelemetryMetricsPrometheus.Core.scrape(:test_reporter)
 
     assert metrics_scrape =~ "http_request_total"
-
-    stop(:test_reporter)
   end
 
   test "logs an error for unsupported metric types" do
@@ -42,15 +38,9 @@ defmodule TelemetryMetricsPrometheusTest do
     ]
 
     assert capture_log(fn ->
-             opts = [name: :test_reporter, validations: false]
-             :ok = init(metrics, opts)
+             opts = [metrics: metrics, validations: false]
+             _pid = start_supervised!({TelemetryMetricsPrometheus, opts})
+             Process.sleep(10)
            end) =~ "Metric type summary is unsupported."
-
-    stop(:test_reporter)
-  end
-
-  defp stop(name) do
-    TelemetryMetricsPrometheus.stop(name)
-    TelemetryMetricsPrometheus.Core.stop(name)
   end
 end
