@@ -17,6 +17,11 @@ want to implement Prometheus or use `:telemetry` in your project, have a look at
 something like the [OpenCensus](https://github.com/opencensus-beam) project and 
 see if it better meets your needs.
 
+### What if I don't want the bundled server?
+
+[TelemetryMetricsPrometheus.Core](https://github.com/bryannaegele/telemetry_metrics_prometheus_core) is the core implementation. You can run Core directly, however you will need to do all
+of the plumbing to expose a `/metrics` route.
+
 ## Installation
 
 The package can be installed by adding `telemetry_metrics_prometheus` to your 
@@ -25,7 +30,7 @@ list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:telemetry_metrics_prometheus, "~> 0.2"}
+    {:telemetry_metrics_prometheus, "~> 0.3"}
   ]
 end
 ```

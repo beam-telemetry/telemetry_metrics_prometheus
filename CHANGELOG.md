@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.3.0
+
+### Changes
+
+  * The core functionality of TelemetryMetricsPrometheus has been split to its own
+  package [TelemetryMetricsPrometheus.Core](https://github.com/bryannaegele/telemetry_metrics_prometheus_core) for users with more advanced needs while keeping this package as an out-of-the-box solution. This was not a breaking change, however...
+  * TelemetryMetricsPrometheus is no longer a standalone application and should be run
+  under a supervision tree, typically under Application. See the [docs](https://hexdocs.pm/telemetry_metrics_prometheus/TelemetryMetricsPrometheus.html#start_link/1) for details.
+  * Metrics are now passed as a required option in your child spec. These and any other
+  options are passed down to Core to keep things simple.
+
 ## v0.2.0
 
 ### Enhancements

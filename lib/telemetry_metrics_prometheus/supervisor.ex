@@ -1,4 +1,5 @@
 defmodule TelemetryMetricsPrometheus.Supervisor do
+  @moduledoc false
   use Supervisor
 
   alias TelemetryMetricsPrometheus.Router
