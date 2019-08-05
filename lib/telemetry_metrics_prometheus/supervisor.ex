@@ -14,7 +14,7 @@ defmodule TelemetryMetricsPrometheus.Supervisor do
       {TelemetryMetricsPrometheus.Core, args},
       {Plug.Cowboy,
        scheme: Keyword.get(args, :protocol),
-       plug: Router,
+       plug: {Router, [name: Keyword.get(args, :name)]},
        options: [port: Keyword.get(args, :port)]}
     ]
 
