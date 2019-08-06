@@ -8,26 +8,31 @@ defmodule TelemetryMetricsPrometheusTest do
     child_spec = TelemetryMetricsPrometheus.child_spec(metrics: [])
 
     assert child_spec == %{
-      id: :prometheus_metrics,
-      start:
-      {TelemetryMetricsPrometheus.Supervisor, :start_link,
-       [
-         [
-           port: 9568,
-           protocol: :http,
-           name: :prometheus_metrics,
-           metrics: []
-         ]
-       ]}
-    }
+             id: :prometheus_metrics,
+             start:
+               {TelemetryMetricsPrometheus.Supervisor, :start_link,
+                [
+                  [
+                    port: 9568,
+                    protocol: :http,
+                    name: :prometheus_metrics,
+                    metrics: []
+                  ]
+                ]}
+           }
 
-    assert %{id: :my_metrics} = TelemetryMetricsPrometheus.child_spec(name: :my_metrics, metrics: [])
-    assert %{id: :global_metrics} = TelemetryMetricsPrometheus.child_spec(name: {:global, :global_metrics}, metrics: [])
+    assert %{id: :my_metrics} =
+             TelemetryMetricsPrometheus.child_spec(name: :my_metrics, metrics: [])
+
+    assert %{id: :global_metrics} =
+             TelemetryMetricsPrometheus.child_spec(name: {:global, :global_metrics}, metrics: [])
 
     assert %{id: :via_metrics} =
-      TelemetryMetricsPrometheus.child_spec(name: {:via, :example, :via_metrics}, metrics: [])
+             TelemetryMetricsPrometheus.child_spec(
+               name: {:via, :example, :via_metrics},
+               metrics: []
+             )
   end
-
 
   test "initializes properly" do
     metrics = [
@@ -76,9 +81,9 @@ defmodule TelemetryMetricsPrometheusTest do
     assert :ets.info(:test_reporter_dist) != :undefined
 
     :telemetry.execute([:http, :request, :stop], %{duration: 300_000_000}, %{
-                         method: "get",
-                         code: 200
-                       })
+      method: "get",
+      code: 200
+    })
 
     metrics_scrape = TelemetryMetricsPrometheus.Core.scrape(:test_reporter)
 
