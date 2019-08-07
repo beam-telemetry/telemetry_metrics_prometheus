@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.1
+
+### Fixes
+
+  * Passes the name to the router, fixing broken scrapes (thanks to @kbredemeier)
+  
 ## v0.3.0
 
 ### Changes
