@@ -62,6 +62,34 @@ defmodule TelemetryMetricsPrometheusTest do
     assert metrics_scrape =~ "http_request_total"
   end
 
+  test "initializes properly with defaults" do
+    metrics = [
+      Metrics.counter("http.request.total",
+        event_name: [:http, :request, :stop],
+        tags: [:method, :code],
+        description: "The total number of HTTP requests."
+      )
+    ]
+
+    opts = [metrics: metrics]
+
+    _pid = start_supervised!({TelemetryMetricsPrometheus, opts})
+
+    Process.sleep(10)
+
+    assert :ets.info(:prometheus_metrics) != :undefined
+    assert :ets.info(:prometheus_metrics_dist) != :undefined
+
+    :telemetry.execute([:http, :request, :stop], %{duration: 300_000_000}, %{
+      method: "get",
+      code: 200
+    })
+
+    metrics_scrape = TelemetryMetricsPrometheus.Core.scrape()
+
+    assert metrics_scrape =~ "http_request_total"
+  end
+
   test "initializes properly using start_link/1" do
     metrics = [
       Metrics.counter("http.request.total",

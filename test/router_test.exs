@@ -2,6 +2,7 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
   use ExUnit.Case, async: true
   use Plug.Test
 
+  alias Telemetry.Metrics
   alias TelemetryMetricsPrometheus.Router
 
   test "returns a 404 for a non-matching route" do
@@ -10,13 +11,13 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
 
     _pid =
       start_supervised!(
-        {TelemetryMetricsPrometheus, [metrics: [], name: :test, port: 9999, validations: false]}
+        {TelemetryMetricsPrometheus, [metrics: [], port: 9999, validations: false]}
       )
 
     Process.sleep(10)
 
     # Invoke the plug
-    conn = Router.call(conn, Router.init(name: :test))
+    conn = Router.call(conn, Router.init(name: :prometheus_metrics))
 
     # Assert the response and status
     assert conn.state == :sent
@@ -29,10 +30,28 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
 
     _pid =
       start_supervised!(
-        {TelemetryMetricsPrometheus, [metrics: [], name: :test, port: 9999, validations: false]}
+        {TelemetryMetricsPrometheus,
+         [
+           metrics: [
+             Metrics.counter("http.request.total",
+               event_name: [:http, :request, :stop],
+               tags: [:method, :code],
+               description: "The total number of HTTP requests."
+             )
+           ],
+           name: :test,
+           port: 9999,
+           validations: false,
+           monitor_router: true
+         ]}
       )
 
     Process.sleep(10)
+
+    :telemetry.execute([:http, :request, :stop], %{duration: 300_000_000}, %{
+      method: "get",
+      code: 200
+    })
 
     # Invoke the plug
     conn = Router.call(conn, Router.init(name: :test))
@@ -40,6 +59,7 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
     # Assert the response and status
     assert conn.state == :sent
     assert conn.status == 200
+    assert conn.resp_body =~ "http_request_total"
     assert get_resp_header(conn, "content-type") |> hd() =~ "text/plain"
   end
 end

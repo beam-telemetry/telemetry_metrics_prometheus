@@ -24,7 +24,7 @@
   "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.4", "f0eafff810d2041e93f915ef59899c923f4568f4585904d010387ed74988e77b", [:make, :mix, :rebar3], [], "hexpm"},
   "telemetry": {:hex, :telemetry, "0.4.0", "8339bee3fa8b91cb84d14c2935f8ecf399ccd87301ad6da6b71c09553834b2ab", [:rebar3], []},
   "telemetry_metrics": {:hex, :telemetry_metrics, "0.3.0", "5de4037d058faf6355835c0ec65ff19605258ee696fa9f93304a389d2d497445", [:mix], [{:telemetry, "~> 0.4", [hex: :telemetry, repo: "hexpm", optional: false]}], "hexpm"},
-  "telemetry_metrics_prometheus_core": {:hex, :telemetry_metrics_prometheus_core, "0.2.0", "720d976865fb1e36015fb98dd32610ad81aadc998bcc286729faa6a35510e5d2", [:mix], [{:telemetry, "~> 0.4", [hex: :telemetry, repo: "hexpm", optional: false]}, {:telemetry_metrics, "~> 0.3", [hex: :telemetry_metrics, repo: "hexpm", optional: false]}, {:telemetry_poller, "~> 0.4", [hex: :telemetry_poller, repo: "hexpm", optional: false]}], "hexpm"},
+  "telemetry_metrics_prometheus_core": {:hex, :telemetry_metrics_prometheus_core, "0.2.1", "2413d7ce7f0c9944c48b1499c0387dd63b5c633845397f6e3de7d32cdc1521bd", [:mix], [{:telemetry, "~> 0.4", [hex: :telemetry, repo: "hexpm", optional: false]}, {:telemetry_metrics, "~> 0.3", [hex: :telemetry_metrics, repo: "hexpm", optional: false]}, {:telemetry_poller, "~> 0.4", [hex: :telemetry_poller, repo: "hexpm", optional: false]}], "hexpm"},
   "telemetry_poller": {:hex, :telemetry_poller, "0.4.0", "da64dea54b77604023e8d15dc61a5df8968f4c9e013eba561bfb2bc614b15432", [:rebar3], [], "hexpm"},
   "unicode_util_compat": {:hex, :unicode_util_compat, "0.4.1", "d869e4c68901dd9531385bb0c8c40444ebf624e60b6962d95952775cac5e90cd", [:rebar3], [], "hexpm"},
 }
