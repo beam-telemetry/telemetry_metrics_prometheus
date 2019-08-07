@@ -32,6 +32,25 @@ defmodule TelemetryMetricsPrometheus do
 
   Please see the `TelemetryMetricsPrometheus.Core` docs for information on metric
   types and units.
+
+  ## Telemetry Events
+
+  * `[:prometheus_metrics, :plug, :stop]` - invoked at the end of every scrape. The
+  measurement returned is `:duration` and the metadata is the `conn` map for the call.
+
+  A suggested Distribution definition might look like:
+
+      Metrics.distribution("prometheus_metrics.scrape.duration.milliseconds",
+        buckets: [0.05, 0.1, 0.2, 0.5, 1],
+        description: "A histogram of the request duration for prometheus metrics scrape.",
+        event_name: [:prometheus_metrics, :plug, :stop],
+        measurement: :duration,
+        tags: [:name],
+        tag_values: fn %{conn: conn} ->
+          %{name: conn.private[:prometheus_metrics_name]}
+        end,
+        unit: {:native, :millisecond}
+      )
   """
 
   require Logger
