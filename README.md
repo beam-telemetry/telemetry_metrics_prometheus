@@ -2,7 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/bryannaegele/telemetry_metrics_prometheus/tree/master.svg?style=svg)](https://circleci.com/gh/bryannaegele/telemetry_metrics_prometheus/tree/master) [![codecov](https://codecov.io/gh/bryannaegele/telemetry_metrics_prometheus/branch/master/graph/badge.svg?token=ZukGAUDLwH)](https://codecov.io/gh/bryannaegele/telemetry_metrics_prometheus) [![Hex](https://img.shields.io/hexpm/v/telemetry_metrics_prometheus.svg)](https://hex.pm/packages/telemetry_metrics_prometheus) [![Hexdocs](https://img.shields.io/badge/hex-docs-blue.svg?style=flat)](https://hexdocs.pm/telemetry_metrics_prometheus/overview.html)
 
-TelemetryMetricsPrometheus is a [Telemetry.Metrics Reporter](https://hexdocs.pm/telemetry_metrics/overview.html#reporters) for aggregating and exposing [Prometheus](https://prometheus.io) metrics based on `Telemetry.Metrics` definitions. TelemetryMetricsPrometheus provides a server out of the box exposing a `/metrics` endpoint, making setup a breeze.
+TelemetryMetricsPrometheus is a [Telemetry.Metrics Reporter](https://hexdocs.pm/telemetry_metrics/Telemetry.Metrics.html#module-reporters) for aggregating and exposing [Prometheus](https://prometheus.io) metrics based on `Telemetry.Metrics` definitions. TelemetryMetricsPrometheus provides a server out of the box exposing a `/metrics` endpoint, making setup a breeze.
 
 ## Is this the right Prometheus package for me?
 
