@@ -59,6 +59,8 @@ defmodule TelemetryMetricsPrometheus do
           TelemetryMetricsPrometheus.Core.prometheus_option()
           | {:port, pos_integer()}
           | {:metrics, TelemetryMetricsPrometheus.Core.metrics()}
+          | {:protocol, :http | :https}
+          | {:plug_cowboy_opts, Keyword.t()}
 
   @type options :: [option]
 
@@ -102,6 +104,8 @@ defmodule TelemetryMetricsPrometheus do
   * `:metrics` - a list of `Telemetry.Metrics` definitions to monitor. **required**
   * `:name` - the name to set the process's id to. Defaults to `:prometheus_metrics`
   * `:port` - port number for the reporter instance's server. Defaults to `9568`
+  * `:protocol` - http protocol scheme to use. Defaults to `:http`
+  * `:plug_cowboy_opts` - additional `plug_cowboy` options, such as ssl settings. See [Plug.Cowboy](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.html#module-options) for more information. Defaults to `[]`. Setting the `:port` option here will be overriden by the root `:port` option.
 
   All other options are forwarded to `TelemetryMetricsPrometheus.Core.init/2`.
   """
@@ -112,11 +116,19 @@ defmodule TelemetryMetricsPrometheus do
   end
 
   defp ensure_options(options) do
-    Keyword.merge(default_options(), options)
+    {port, opts} =
+      Keyword.merge(default_options(), options)
+      |> Keyword.pop(:port)
+
+    Keyword.delete(opts, :plug_cowboy_opts)
+    |> Keyword.update!(:options, fn opts ->
+      Keyword.merge(opts, Keyword.get(options, :plug_cowboy_opts, []))
+      |> Keyword.put(:port, port)
+    end)
   end
 
   @spec default_options() :: options()
   defp default_options() do
-    [port: 9568, protocol: :http, name: :prometheus_metrics]
+    [port: 9568, protocol: :http, name: :prometheus_metrics, options: []]
   end
 end

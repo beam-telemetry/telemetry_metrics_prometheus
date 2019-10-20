@@ -15,7 +15,7 @@ defmodule TelemetryMetricsPrometheus.Supervisor do
       {Plug.Cowboy,
        scheme: Keyword.get(args, :protocol),
        plug: {Router, [name: Keyword.get(args, :name)]},
-       options: [port: Keyword.get(args, :port)]}
+       options: Keyword.get(args, :options)}
     ]
 
     Supervisor.init(children, strategy: :rest_for_one)
