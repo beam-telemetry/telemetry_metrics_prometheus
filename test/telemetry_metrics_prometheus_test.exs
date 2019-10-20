@@ -7,16 +7,51 @@ defmodule TelemetryMetricsPrometheusTest do
   test "has a child spec" do
     child_spec = TelemetryMetricsPrometheus.child_spec(metrics: [])
 
+    ssl_child_spec =
+      TelemetryMetricsPrometheus.child_spec(
+        metrics: [],
+        port: 9443,
+        protocol: :https,
+        plug_cowboy_opts: [
+          password: "SECRET",
+          otp_app: :my_app,
+          keyfile: "priv/ssl/key.pem",
+          certfile: "priv/ssl/cert.pem",
+          dhfile: "priv/ssl/dhparam.pem"
+        ]
+      )
+
     assert child_spec == %{
              id: :prometheus_metrics,
              start:
                {TelemetryMetricsPrometheus.Supervisor, :start_link,
                 [
                   [
-                    port: 9568,
                     protocol: :http,
                     name: :prometheus_metrics,
+                    options: [port: 9568],
                     metrics: []
+                  ]
+                ]}
+           }
+
+    assert ssl_child_spec == %{
+             id: :prometheus_metrics,
+             start:
+               {TelemetryMetricsPrometheus.Supervisor, :start_link,
+                [
+                  [
+                    name: :prometheus_metrics,
+                    options: [
+                      port: 9443,
+                      password: "SECRET",
+                      otp_app: :my_app,
+                      keyfile: "priv/ssl/key.pem",
+                      certfile: "priv/ssl/cert.pem",
+                      dhfile: "priv/ssl/dhparam.pem"
+                    ],
+                    metrics: [],
+                    protocol: :https
                   ]
                 ]}
            }
