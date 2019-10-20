@@ -1,6 +1,6 @@
 # TelemetryMetricsPrometheus
 
-[![CircleCI](https://circleci.com/gh/bryannaegele/telemetry_metrics_prometheus/tree/master.svg?style=svg)](https://circleci.com/gh/bryannaegele/telemetry_metrics_prometheus/tree/master) [![codecov](https://codecov.io/gh/bryannaegele/telemetry_metrics_prometheus/branch/master/graph/badge.svg?token=ZukGAUDLwH)](https://codecov.io/gh/bryannaegele/telemetry_metrics_prometheus) [![Hex](https://img.shields.io/hexpm/v/telemetry_metrics_prometheus.svg)](https://hex.pm/packages/telemetry_metrics_prometheus) [![Hexdocs](https://img.shields.io/badge/hex-docs-blue.svg?style=flat)](https://hexdocs.pm/telemetry_metrics_prometheus/overview.html)
+[![CircleCI](https://circleci.com/gh/beam-telemetry/telemetry_metrics_prometheus/tree/master.svg?style=svg)](https://circleci.com/gh/beam-telemetry/telemetry_metrics_prometheus/tree/master) [![codecov](https://codecov.io/gh/beam-telemetry/telemetry_metrics_prometheus/branch/master/graph/badge.svg?token=ZukGAUDLwH)](https://codecov.io/gh/beam-telemetry/telemetry_metrics_prometheus) [![Hex](https://img.shields.io/hexpm/v/telemetry_metrics_prometheus.svg)](https://hex.pm/packages/telemetry_metrics_prometheus) [![Hexdocs](https://img.shields.io/badge/hex-docs-blue.svg?style=flat)](https://hexdocs.pm/telemetry_metrics_prometheus/overview.html)
 
 TelemetryMetricsPrometheus is a [Telemetry.Metrics Reporter](https://hexdocs.pm/telemetry_metrics/Telemetry.Metrics.html#module-reporters) for aggregating and exposing [Prometheus](https://prometheus.io) metrics based on `Telemetry.Metrics` definitions. TelemetryMetricsPrometheus provides a server out of the box exposing a `/metrics` endpoint, making setup a breeze.
 
@@ -19,7 +19,7 @@ see if it better meets your needs.
 
 ### What if I don't want the bundled server?
 
-[TelemetryMetricsPrometheus.Core](https://github.com/bryannaegele/telemetry_metrics_prometheus_core) is the core implementation. You can run Core directly, however you will need to do all
+[TelemetryMetricsPrometheus.Core](https://github.com/beam-telemetry/telemetry_metrics_prometheus_core) is the core implementation. You can run Core directly, however you will need to do all
 of the plumbing to expose a `/metrics` route.
 
 ## Installation

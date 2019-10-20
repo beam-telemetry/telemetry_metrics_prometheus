@@ -38,7 +38,7 @@ defmodule TelemetryMetricsPrometheus.MixProject do
     [
       main: "overview",
       canonical: "http://hexdocs.pm/telemetry_metrics_prometheus",
-      source_url: "https://github.com/bryannaegele/telemetry_metrics_prometheus",
+      source_url: "https://github.com/beam-telemetry/telemetry_metrics_prometheus",
       source_ref: "v#{@version}",
       extras: [
         "docs/overview.md",
@@ -65,7 +65,7 @@ defmodule TelemetryMetricsPrometheus.MixProject do
     [
       maintainers: ["Bryan Naegele"],
       licenses: ["Apache 2.0"],
-      links: %{"GitHub" => "https://github.com/bryannaegele/telemetry_metrics_prometheus"}
+      links: %{"GitHub" => "https://github.com/beam-telemetry/telemetry_metrics_prometheus"}
     ]
   end
 end
