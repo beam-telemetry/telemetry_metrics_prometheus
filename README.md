@@ -30,7 +30,7 @@ list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:telemetry_metrics_prometheus, "~> 0.3"}
+    {:telemetry_metrics_prometheus, "~> 0.4"}
   ]
 end
 ```
@@ -42,7 +42,7 @@ See the documentation on [Hexdocs](https://hexdocs.pm/telemetry_metrics_promethe
 
 Contributors are highly welcome! 
 
-Additional documentation and tests, TLS support, and benchmarking are all needed. 
+Additional documentation and tests are welcome. 
 
 Please open an issue for discussion before undertaking anything non-trivial before
 jumping in and submitting a PR.
