@@ -1,7 +1,7 @@
 defmodule TelemetryMetricsPrometheus.MixProject do
   use Mix.Project
 
-  @version "0.3.1"
+  @version "0.4.0"
 
   def project do
     [
@@ -30,14 +30,13 @@ defmodule TelemetryMetricsPrometheus.MixProject do
       {:ex_doc, "~> 0.20.2", only: [:dev, :docs]},
       {:excoveralls, "~> 0.10.6", only: :test, runtime: false},
       {:plug_cowboy, "~> 2.1"},
-      {:telemetry_metrics_prometheus_core, "~> 0.2"}
+      {:telemetry_metrics_prometheus_core, "~> 0.3"}
     ]
   end
 
   defp docs do
     [
-      main: "overview",
-      canonical: "http://hexdocs.pm/telemetry_metrics_prometheus",
+      main: "TelemetryMetricsPrometheus",
       source_url: "https://github.com/beam-telemetry/telemetry_metrics_prometheus",
       source_ref: "v#{@version}",
       extras: [

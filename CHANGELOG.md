@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.0
+
+### Changes
+
+  * Bumps TelemetryMetricsPrometheus.Core to v0.3
+
 ## v0.3.1
 
 ### Fixes
