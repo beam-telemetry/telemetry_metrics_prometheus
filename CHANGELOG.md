@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.5.0
+
+### Changes
+
+  * Minimum Elixir version now 1.7 for Plug support
+  * Core update
+  
+### Fixes
+
+  * Re-enabled multiple instance support broken after Core split
+
 ## v0.4.0
 
 ### Changes
