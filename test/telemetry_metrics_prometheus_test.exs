@@ -125,6 +125,23 @@ defmodule TelemetryMetricsPrometheusTest do
     assert metrics_scrape =~ "http_request_total"
   end
 
+  test "supports running multiple instances" do
+    _instance_1 =
+      start_supervised!(
+        TelemetryMetricsPrometheus.child_spec(name: :prom_server_1, metrics: [], port: 9999)
+      )
+
+    _instance_2 =
+      start_supervised!(
+        TelemetryMetricsPrometheus.child_spec(
+          name: :prom_server_2,
+          metrics: [],
+          port: 9987,
+          plug_cowboy_opts: [ref: make_ref()]
+        )
+      )
+  end
+
   test "initializes properly using start_link/1" do
     metrics = [
       Metrics.counter("http.request.total",
