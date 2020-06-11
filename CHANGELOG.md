@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.0
+
+### Changes
+
+  * [BREAKING] - Updates Core which supports Telemetry.Metrics v0.5 which includes
+    a breaking change
+
 ## v0.5.0
 
 ### Changes

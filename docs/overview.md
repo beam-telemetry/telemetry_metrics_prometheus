@@ -46,4 +46,4 @@ you're reporting a large number of disributions or you have a high tag cardinali
 
 ## Core library
 
-Please see https://github.com/beam-telemetry/telemetry_metrics_prometheus_core/blob/master/docs/overview.md for documentation of the core that powers this library.
+Please see https://hexdocs.pm/telemetry_metrics_prometheus_core/TelemetryMetricsPrometheus.Core.html for documentation of the core that powers this library.

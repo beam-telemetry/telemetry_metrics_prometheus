@@ -107,7 +107,7 @@ defmodule TelemetryMetricsPrometheus do
   * `:protocol` - http protocol scheme to use. Defaults to `:http`
   * `:plug_cowboy_opts` - additional `plug_cowboy` options, such as ssl settings. See [Plug.Cowboy](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.html#module-options) for more information. Defaults to `[]`. Setting the `:port` option here will be overriden by the root `:port` option.
 
-  All other options are forwarded to `TelemetryMetricsPrometheus.Core.init/2`.
+  All other options are forwarded to `TelemetryMetricsPrometheus.Core`.
   """
   @spec start_link(options()) :: GenServer.on_start()
   def start_link(options) do
