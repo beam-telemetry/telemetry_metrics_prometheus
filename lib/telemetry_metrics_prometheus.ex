@@ -41,7 +41,7 @@ defmodule TelemetryMetricsPrometheus do
   A suggested Distribution definition might look like:
 
       Metrics.distribution("prometheus_metrics.scrape.duration.milliseconds",
-        buckets: [0.05, 0.1, 0.2, 0.5, 1],
+        reporter_options: [buckets: [0.05, 0.1, 0.2, 0.5, 1]],
         description: "A histogram of the request duration for prometheus metrics scrape.",
         event_name: [:prometheus_metrics, :plug, :stop],
         measurement: :duration,
