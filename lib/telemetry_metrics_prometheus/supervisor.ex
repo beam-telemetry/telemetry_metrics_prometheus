@@ -16,11 +16,12 @@ defmodule TelemetryMetricsPrometheus.Supervisor do
         scheme: Keyword.get(args, :protocol),
         plug: {Router, [name: Keyword.get(args, :name)]},
         options:
-          case Keyword.fetch(:name) do
+          case Keyword.fetch(args, :name) do
             {:ok, name} ->
               args
               |> Keyword.get(:options)
               |> Keyword.put_new(:ref, name)
+
             :error ->
               Keyword.get(args, :options)
           end
