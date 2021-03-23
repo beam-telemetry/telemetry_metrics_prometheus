@@ -15,7 +15,15 @@ defmodule TelemetryMetricsPrometheus.Supervisor do
       Plug.Cowboy.child_spec(
         scheme: Keyword.get(args, :protocol),
         plug: {Router, [name: Keyword.get(args, :name)]},
-        options: Keyword.get(args, :options)
+        options:
+          case Keyword.fetch(:name) do
+            {:ok, name} ->
+              args
+              |> Keyword.get(:options)
+              |> Keyword.put_new(:ref, name)
+            :error ->
+              Keyword.get(args, :options)
+          end
       )
     ]
 
