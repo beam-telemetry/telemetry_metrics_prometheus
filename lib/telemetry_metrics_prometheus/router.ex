@@ -10,6 +10,8 @@ defmodule TelemetryMetricsPrometheus.Router do
 
   get "/metrics" do
     name = opts[:name]
+    pre_scrape = opts[:pre_scrape]
+    unless is_nil(pre_scrape), do: pre_scrape.()
     metrics = TelemetryMetricsPrometheus.Core.scrape(name)
 
     conn

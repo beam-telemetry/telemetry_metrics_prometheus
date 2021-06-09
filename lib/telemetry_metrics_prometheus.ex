@@ -106,6 +106,7 @@ defmodule TelemetryMetricsPrometheus do
   * `:port` - port number for the reporter instance's server. Defaults to `9568`
   * `:protocol` - http protocol scheme to use. Defaults to `:http`
   * `:plug_cowboy_opts` - additional `plug_cowboy` options, such as ssl settings. See [Plug.Cowboy](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.html#module-options) for more information. Defaults to `[]`. Setting the `:port` option here will be overriden by the root `:port` option.
+  * `:pre_scrape` - an optional 0 arity function that will be called each time the metrics endpoint is called, before the metrics are aggregated
 
   All other options are forwarded to `TelemetryMetricsPrometheus.Core`.
   """
