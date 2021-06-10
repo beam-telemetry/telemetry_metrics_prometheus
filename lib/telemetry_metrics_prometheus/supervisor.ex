@@ -26,4 +26,5 @@ defmodule TelemetryMetricsPrometheus.Supervisor do
 
     Supervisor.init(children, strategy: :rest_for_one)
   end
+
 end

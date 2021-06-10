@@ -83,7 +83,7 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
            port: 9999,
            validations: false,
            monitor_router: true,
-           pre_scrape: fn -> send(test_pid, :invoked) end
+           pre_scrape: {__MODULE__, :test_scrape, [test_pid]}
          ]}
       )
 
@@ -96,7 +96,7 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
 
     # Invoke the plug
     conn =
-      Router.call(conn, Router.init(name: :test, pre_scrape: fn ->  send(test_pid, :invoked) end))
+      Router.call(conn, Router.init(name: :test, pre_scrape: {__MODULE__, :test_scrape, [test_pid]}))
 
     # Assert the response and status
     assert conn.state == :sent
@@ -105,5 +105,9 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
     assert get_resp_header(conn, "content-type") |> hd() =~ "text/plain"
 
     assert_receive :invoked
+  end
+
+  def test_scrape(test_pid) do
+    send(test_pid, :invoked)
   end
 end
