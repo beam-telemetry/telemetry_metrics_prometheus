@@ -10,6 +10,8 @@ defmodule TelemetryMetricsPrometheus.Router do
 
   get "/metrics" do
     name = opts[:name]
+
+    execute_pre_scrape_handler(opts[:pre_scrape_handler])
     metrics = TelemetryMetricsPrometheus.Core.scrape(name)
 
     conn
@@ -21,4 +23,6 @@ defmodule TelemetryMetricsPrometheus.Router do
   match _ do
     Conn.send_resp(conn, 404, "Not Found")
   end
+
+  defp execute_pre_scrape_handler({m, f, a}), do: apply(m, f, a)
 end

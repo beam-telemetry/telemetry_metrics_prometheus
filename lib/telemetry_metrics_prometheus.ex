@@ -61,6 +61,7 @@ defmodule TelemetryMetricsPrometheus do
           | {:metrics, TelemetryMetricsPrometheus.Core.metrics()}
           | {:protocol, :http | :https}
           | {:plug_cowboy_opts, Keyword.t()}
+          | {:pre_scrape_handler, mfa()}
 
   @type options :: [option]
 
@@ -106,6 +107,7 @@ defmodule TelemetryMetricsPrometheus do
   * `:port` - port number for the reporter instance's server. Defaults to `9568`
   * `:protocol` - http protocol scheme to use. Defaults to `:http`
   * `:plug_cowboy_opts` - additional `plug_cowboy` options, such as ssl settings. See [Plug.Cowboy](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.html#module-options) for more information. Defaults to `[]`. Setting the `:port` option here will be overriden by the root `:port` option.
+  * `:pre_scrape_handler` - an MFA tuple defining a function that will be called each time the metrics endpoint is called, before the metrics are aggregated
 
   All other options are forwarded to `TelemetryMetricsPrometheus.Core`.
   """
@@ -129,6 +131,15 @@ defmodule TelemetryMetricsPrometheus do
 
   @spec default_options() :: options()
   defp default_options() do
-    [port: 9568, protocol: :http, name: :prometheus_metrics, options: []]
+    [
+      port: 9568,
+      protocol: :http,
+      name: :prometheus_metrics,
+      options: [],
+      pre_scrape_handler: {__MODULE__, :default_pre_scrape_handler, []}
+    ]
   end
+
+  @spec default_pre_scrape_handler() :: :ok
+  def default_pre_scrape_handler, do: :ok
 end
