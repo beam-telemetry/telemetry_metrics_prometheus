@@ -54,7 +54,14 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
     })
 
     # Invoke the plug
-    conn = Router.call(conn, Router.init(name: :test))
+    conn =
+      Router.call(
+        conn,
+        Router.init(
+          name: :test,
+          pre_scrape_handler: {TelemetryMetricsPrometheus, :default_pre_scrape_handler, []}
+        )
+      )
 
     # Assert the response and status
     assert conn.state == :sent
@@ -63,7 +70,7 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
     assert get_resp_header(conn, "content-type") |> hd() =~ "text/plain"
   end
 
-  test "calls the configured pre-scrape" do
+  test "calls the configured pre-scrape handler" do
     # Create a test connection
     conn = conn(:get, "/metrics")
     test_pid = self()
@@ -83,7 +90,7 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
            port: 9999,
            validations: false,
            monitor_router: true,
-           pre_scrape: {__MODULE__, :test_scrape, [test_pid]}
+           pre_scrape_handler: {__MODULE__, :test_scrape, [test_pid]}
          ]}
       )
 
@@ -96,7 +103,10 @@ defmodule TelemetryMetricsPrometheus.RouterTest do
 
     # Invoke the plug
     conn =
-      Router.call(conn, Router.init(name: :test, pre_scrape: {__MODULE__, :test_scrape, [test_pid]}))
+      Router.call(
+        conn,
+        Router.init(name: :test, pre_scrape_handler: {__MODULE__, :test_scrape, [test_pid]})
+      )
 
     # Assert the response and status
     assert conn.state == :sent

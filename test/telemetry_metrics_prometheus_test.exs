@@ -30,6 +30,8 @@ defmodule TelemetryMetricsPrometheusTest do
                     protocol: :http,
                     name: :prometheus_metrics,
                     options: [port: 9568],
+                    pre_scrape_handler:
+                      {TelemetryMetricsPrometheus, :default_pre_scrape_handler, []},
                     metrics: []
                   ]
                 ]}
@@ -50,6 +52,8 @@ defmodule TelemetryMetricsPrometheusTest do
                       certfile: "priv/ssl/cert.pem",
                       dhfile: "priv/ssl/dhparam.pem"
                     ],
+                    pre_scrape_handler:
+                      {TelemetryMetricsPrometheus, :default_pre_scrape_handler, []},
                     metrics: [],
                     protocol: :https
                   ]

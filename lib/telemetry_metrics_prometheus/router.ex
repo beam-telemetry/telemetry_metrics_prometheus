@@ -11,10 +11,7 @@ defmodule TelemetryMetricsPrometheus.Router do
   get "/metrics" do
     name = opts[:name]
 
-    {pre_scrape_module, pre_scrape_function, pre_scrape_args} =
-      Keyword.get(opts, :pre_scrape, {__MODULE__, :default_pre_scrape, []})
-
-    apply(pre_scrape_module, pre_scrape_function, pre_scrape_args)
+    execute_pre_scrape_handler(opts[:pre_scrape_handler])
     metrics = TelemetryMetricsPrometheus.Core.scrape(name)
 
     conn
@@ -27,5 +24,5 @@ defmodule TelemetryMetricsPrometheus.Router do
     Conn.send_resp(conn, 404, "Not Found")
   end
 
-  def default_pre_scrape(), do: :ok
+  defp execute_pre_scrape_handler({m, f, a}), do: apply(m, f, a)
 end
