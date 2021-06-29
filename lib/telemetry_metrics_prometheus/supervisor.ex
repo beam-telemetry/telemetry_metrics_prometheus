@@ -18,7 +18,7 @@ defmodule TelemetryMetricsPrometheus.Supervisor do
           {Router,
            [
              name: Keyword.get(args, :name),
-             pre_scrape: Keyword.get(args, :pre_scrape)
+             pre_scrape_handler: Keyword.get(args, :pre_scrape_handler)
            ]},
         options: Keyword.get(args, :options)
       )
