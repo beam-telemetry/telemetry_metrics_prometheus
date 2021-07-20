@@ -84,7 +84,7 @@ defmodule TelemetryMetricsPrometheus do
     opts = ensure_options(options)
 
     id =
-      case Keyword.get(opts, :name, :prometheus_metrics) do
+      case Keyword.get(opts, :name) do
         name when is_atom(name) -> name
         {:global, name} -> name
         {:via, _, name} -> name
@@ -118,14 +118,15 @@ defmodule TelemetryMetricsPrometheus do
   end
 
   defp ensure_options(options) do
-    {port, opts} =
+    {port, updated_opts} =
       Keyword.merge(default_options(), options)
       |> Keyword.pop(:port)
 
-    Keyword.delete(opts, :plug_cowboy_opts)
+    Keyword.delete(updated_opts, :plug_cowboy_opts)
     |> Keyword.update!(:options, fn opts ->
       Keyword.merge(opts, Keyword.get(options, :plug_cowboy_opts, []))
       |> Keyword.put(:port, port)
+      |> Keyword.put_new(:ref, Keyword.get(updated_opts, :name))
     end)
   end
 
