@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.1.0
+
+### Changes
+
+  * Adds a pre_scrape_handler to allow custom actions prior to scraping
+
+### Fixes
+
+  * Pass a custom ref to cowboy to allow multiple instances
+
 ## v1.0.0
 
 ### Changes

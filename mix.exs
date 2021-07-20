@@ -1,7 +1,7 @@
 defmodule TelemetryMetricsPrometheus.MixProject do
   use Mix.Project
 
-  @version "1.0.0"
+  @version "1.1.0"
 
   def project do
     [
@@ -26,11 +26,11 @@ defmodule TelemetryMetricsPrometheus.MixProject do
 
   defp deps do
     [
-      {:dialyxir, "~> 1.0.0", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.23", only: [:dev, :docs]},
+      {:dialyxir, "~> 1.1.0", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.25", only: [:dev, :docs]},
       {:excoveralls, "~> 0.13", only: :test, runtime: false},
       {:plug_cowboy, "~> 2.1"},
-      {:telemetry_metrics_prometheus_core, "~> 1.0.0"}
+      {:telemetry_metrics_prometheus_core, "~> 1.0"}
     ]
   end
 
