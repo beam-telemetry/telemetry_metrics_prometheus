@@ -29,7 +29,7 @@ defmodule TelemetryMetricsPrometheusTest do
                   [
                     protocol: :http,
                     name: :prometheus_metrics,
-                    options: [port: 9568],
+                    options: [{:ref, :prometheus_metrics}, port: 9568],
                     metrics: []
                   ]
                 ]}
@@ -43,6 +43,7 @@ defmodule TelemetryMetricsPrometheusTest do
                   [
                     name: :prometheus_metrics,
                     options: [
+                      ref: :prometheus_metrics,
                       port: 9443,
                       password: "SECRET",
                       otp_app: :my_app,
