@@ -14,7 +14,12 @@ defmodule TelemetryMetricsPrometheus.Supervisor do
       {TelemetryMetricsPrometheus.Core, args},
       Plug.Cowboy.child_spec(
         scheme: Keyword.get(args, :protocol),
-        plug: {Router, [name: Keyword.get(args, :name)]},
+        plug:
+          {Router,
+           [
+             name: Keyword.get(args, :name),
+             pre_scrape_handler: Keyword.get(args, :pre_scrape_handler)
+           ]},
         options: Keyword.get(args, :options)
       )
     ]
