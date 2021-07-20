@@ -29,6 +29,7 @@ defmodule TelemetryMetricsPrometheus.MixProject do
       {:dialyxir, "~> 1.0.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.23", only: [:dev, :docs]},
       {:excoveralls, "~> 0.13", only: :test, runtime: false},
+      {:nimble_options, "~> 0.3"},
       {:plug_cowboy, "~> 2.1"},
       {:telemetry_metrics_prometheus_core, "~> 1.0.0"}
     ]

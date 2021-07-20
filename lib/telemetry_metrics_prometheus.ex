@@ -1,4 +1,61 @@
 defmodule TelemetryMetricsPrometheus do
+  @exporter_plug_schema [
+    protocol: [
+      type: :atom,
+      default: :http,
+      doc: "http or https protocol."
+    ],
+
+    port: [
+      type: :non_neg_integer,
+      default: 9568,
+      doc: "port to expose the prometheus exporter on."
+    ]
+  ]
+
+  @exporter_config_schema [
+    enabled?: [
+      type: :boolean,
+      default: false,
+      doc: "is exporter enabled."
+    ],
+
+    opts: [
+      type: :keyword_list,
+      default: [],
+      keys: @exporter_plug_schema,
+      doc: "options for the ExporterPlug with following keys:"
+    ]
+  ]
+
+  @opts_schema [
+    name: [
+      type: :atom,
+      default: :prometheus_telemetry_supervisor,
+      doc: "supervisor name, no need to manually change this most of the time."
+    ],
+
+    exporter: [
+      type: :keyword_list,
+      default: [],
+      keys: @exporter_config_schema,
+      doc: "exporter config with following keys:"
+    ],
+
+    metrics: [
+      type: {:list, :any},
+      required: true,
+      doc: "metrics list, flattened so you can have nested layers of metrics."
+    ],
+
+    pre_scrape_handler: [
+      type: :mfa,
+      default: {__MODULE__, :default_pre_scrape_handler, []},
+      doc: "mfa to run before the exporter executes the metrics scraping to render."
+    ]
+  ]
+
+
   @moduledoc """
   Prometheus Reporter for [`Telemetry.Metrics`](https://github.com/beam-telemetry/telemetry_metrics) definitions.
 
@@ -8,7 +65,7 @@ defmodule TelemetryMetricsPrometheus do
       def start(_type, _args) do
         # List all child processes to be supervised
         children = [
-          {TelemetryMetricsPrometheus, [metrics: metrics()]}
+          {TelemetryMetricsPrometheus, metrics: metrics()}
         ...
         ]
 
@@ -33,6 +90,52 @@ defmodule TelemetryMetricsPrometheus do
   Please see the `TelemetryMetricsPrometheus.Core` docs for information on metric
   types and units.
 
+  ## Enabling the exporter
+
+      def start(_type, _args) do
+        # List all child processes to be supervised
+        children = [
+          {TelemetryMetricsPrometheus,
+            exporter: [enabled?: true],
+            metrics: [MyModule.metrics(), MyOtherModule.metrics()]
+          }
+        ...
+        ]
+
+        opts = [strategy: :one_for_one, name: ExampleApp.Supervisor]
+        Supervisor.start_link(children, opts)
+      end
+
+  ## Umbrella Application Support
+  To utilize this in umbrella applications where some
+  applications may be support applications and others
+  may be entrypoints which are hosted on nodes you can either
+  start this supervisor with or without the exporter.
+
+  Under a typical setup each supporting library would have it's own
+  `TelemetryMetricsPrometheus` with it's own metrics, while the
+  entrypoint applications that are deployed to a node would utilize
+  `TelemetryMetricsPrometheus` with `exporter: [enabled?: true]`.
+
+  When utilized in multiple applications `TelemetryMetricsPrometheus`
+  will only start once but will start adding child processes
+  for every additional time it's started, it will also setup a link
+  between the currently running supervisor and calling application.
+  When scraping the `TelemetryMetricsPrometheus` with an enabled exporter
+  will scrape the rest of the `TelemetryMetricsPrometheus`s running
+  to fetch the metrics for each one and display it.
+
+  This means under a typical setup you may see applications with
+
+      children = [{TelemetryMetricsPrometheus, metrics: [...]}]
+
+  while the server applications will contain
+
+      children = [{TelemetryMetricsPrometheus,
+        exporter: [enabled?: true],
+        metrics: [...]
+      }]
+
   ## Telemetry Events
 
   * `[:prometheus_metrics, :plug, :stop]` - invoked at the end of every scrape. The
@@ -51,9 +154,14 @@ defmodule TelemetryMetricsPrometheus do
         end,
         unit: {:native, :millisecond}
       )
+
+  ## Options
+  #{NimbleOptions.docs(@opts_schema)}
   """
 
   require Logger
+
+  alias TelemetryMetricsPrometheus.MetricsSupervisor
 
   @type option ::
           TelemetryMetricsPrometheus.Core.prometheus_option()
@@ -80,64 +188,22 @@ defmodule TelemetryMetricsPrometheus do
   Returns a child specification to supervise the process.
   """
   @spec child_spec(options()) :: Supervisor.child_spec()
-  def child_spec(options) do
-    opts = ensure_options(options)
-
-    id =
-      case Keyword.get(opts, :name, :prometheus_metrics) do
-        name when is_atom(name) -> name
-        {:global, name} -> name
-        {:via, _, name} -> name
-      end
-
-    spec = %{
-      id: id,
-      start: {TelemetryMetricsPrometheus.Supervisor, :start_link, [opts]}
-    }
-
-    Supervisor.child_spec(spec, [])
-  end
+  defdelegate child_spec(opts), to: MetricsSupervisor
 
   @doc """
   Starts a reporter and links it to the calling process.
 
   Available options:
-  * `:metrics` - a list of `Telemetry.Metrics` definitions to monitor. **required**
-  * `:name` - the name to set the process's id to. Defaults to `:prometheus_metrics`
-  * `:port` - port number for the reporter instance's server. Defaults to `9568`
-  * `:protocol` - http protocol scheme to use. Defaults to `:http`
-  * `:plug_cowboy_opts` - additional `plug_cowboy` options, such as ssl settings. See [Plug.Cowboy](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.html#module-options) for more information. Defaults to `[]`. Setting the `:port` option here will be overriden by the root `:port` option.
-  * `:pre_scrape_handler` - an MFA tuple defining a function that will be called each time the metrics endpoint is called, before the metrics are aggregated
-
-  All other options are forwarded to `TelemetryMetricsPrometheus.Core`.
+  #{NimbleOptions.docs(@opts_schema)}
   """
+
+  def validate_opts(opts), do: NimbleOptions.validate!(opts, @opts_schema)
+
   @spec start_link(options()) :: GenServer.on_start()
   def start_link(options) do
-    ensure_options(options)
-    |> TelemetryMetricsPrometheus.Supervisor.start_link()
-  end
-
-  defp ensure_options(options) do
-    {port, opts} =
-      Keyword.merge(default_options(), options)
-      |> Keyword.pop(:port)
-
-    Keyword.delete(opts, :plug_cowboy_opts)
-    |> Keyword.update!(:options, fn opts ->
-      Keyword.merge(opts, Keyword.get(options, :plug_cowboy_opts, []))
-      |> Keyword.put(:port, port)
-    end)
-  end
-
-  @spec default_options() :: options()
-  defp default_options() do
-    [
-      port: 9568,
-      protocol: :http,
-      name: :prometheus_metrics,
-      options: [],
-      pre_scrape_handler: {__MODULE__, :default_pre_scrape_handler, []}
-    ]
+    options
+      |> NimbleOptions.validate!(@opts_schema)
+      |> MetricsSupervisor.start_link()
   end
 
   @spec default_pre_scrape_handler() :: :ok
